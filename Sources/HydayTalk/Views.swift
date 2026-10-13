@@ -14,7 +14,7 @@ FORM: Native behavior and the approved white floating panel remain.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 */
 enum Page: String, CaseIterable, Identifiable {
-    case home = "總覽", insights = "洞察", history = "聽寫紀錄", hyday = "Hyday", speech = "語音辨識", text = "文字整理", dictionary = "個人詞典", settings = "一般設定"
+    case home = "總覽", insights = "洞察", history = "聽寫紀錄", hyday = "Hyday", speech = "語音辨識", text = "文字整理", dictionary = "個人辭典", settings = "一般設定"
     var id: String { rawValue }
     var title: String { self == .home ? "語音輸入" : rawValue }
     var detail: String {

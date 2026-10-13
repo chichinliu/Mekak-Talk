@@ -40,7 +40,7 @@ struct HydaySettingsView: View {
                     Toggle("提問時參考 Hyday 筆記", isOn: $model.settings.asksHydayNotes).labelsHidden()
                 }
             }
-            SettingsGroup(title: "Hyday 詞彙", detail: "讀取筆記中的 @(名稱) 與 #標籤，作為語音辨識的提示，不會加入個人詞典。") {
+            SettingsGroup(title: "Hyday 詞彙", detail: "讀取筆記中的 @(名稱) 與 #標籤，作為語音辨識的提示，不會加入個人辭典。") {
                 SettingsRow(title: model.scanningHydayVocabulary ? "正在讀取…" : "已讀取 \(model.hydayVocabulary.count) 個詞彙",
                             detail: root == nil ? "設定 Hyday 資料夾後才能使用。" : "打開 Hyday Talk 時會自動讀取，筆記有新增名稱或標籤時可重新讀取。") {
                     Button("重新讀取") { model.reloadHydayVocabulary() }.buttonStyle(AlignButtonStyle())

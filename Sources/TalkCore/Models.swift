@@ -113,7 +113,7 @@ public enum WritingStyle: String, Codable, CaseIterable, Identifiable, Sendable 
     public var detail: String {
         switch self {
         case .natural: return "保留口語語氣並補上標點，刪除重複與無意義贅詞，適合日常訊息。"
-        case .verbatim: return "保留辨識原文的字句，僅套用字形、既有標點與個人詞典，不使用 AI 改寫。"
+        case .verbatim: return "保留辨識原文的字句，僅套用字形、既有標點與個人辭典，不使用 AI 改寫。"
         case .professional: return "改用清楚簡潔的書面用語並補上標點，適合工作郵件與文件。"
         }
     }

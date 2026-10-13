@@ -169,7 +169,7 @@ struct InsightsView: View {
     private var dictionaryCard: some View {
         let total = model.settings.dictionary.count
         let learned = model.settings.dictionary.filter(\.isAutomatic).count
-        return InsightCard(title: "個人詞典", detail: "自動學習的詞彙佔比") {
+        return InsightCard(title: "個人辭典", detail: "自動學習的詞彙佔比") {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .firstTextBaseline, spacing: 24) {
                     VStack(alignment: .leading, spacing: 4) {

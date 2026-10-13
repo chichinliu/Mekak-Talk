@@ -129,7 +129,7 @@ struct SpeechSettingsView: View {
                 }
             }
             SettingsGroup(title: "語音辨識語言") {
-                SettingsRow(title: "辨識語言", detail: "繁體中文會套用字形轉換、全形標點與個人詞典，中英混說的準確度取決於辨識來源。") {
+                SettingsRow(title: "辨識語言", detail: "繁體中文會套用字形轉換、全形標點與個人辭典，中英混說的準確度取決於辨識來源。") {
                     AlignMenuPicker(title: "辨識語言", values: ["zh-TW", "en-US", "ja-JP", "zh-CN"], selection: $model.settings.locale,
                                     label: { ["zh-TW": "繁體中文 · 台灣", "en-US": "English · United States", "ja-JP": "日本語", "zh-CN": "简体中文"][$0] ?? $0 },
                                     showsTitle: false).frame(width: 220)
@@ -145,7 +145,7 @@ struct TextSettingsView: View {
         VStack(alignment: .leading, spacing: 28) {
             SettingsGroup(title: "文字整理來源") {
                 SettingsRow(title: "整理方式", detail: model.settings.textBackend == .basic
-                            ? "保留辨識原文、轉換字形與既有標點並套用詞典，如需補上標點或整理列表，請選擇本機 AI 或 API Key。" : nil) {
+                            ? "保留辨識原文、轉換字形與既有標點並套用辭典，如需補上標點或整理列表，請選擇本機 AI 或 API Key。" : nil) {
                     AlignSegmentedPicker(title: "文字整理來源", values: TextBackend.availableSources,
                                          selection: $model.settings.textBackend, label: { $0.title }).frame(width: 300)
                 }
@@ -155,7 +155,7 @@ struct TextSettingsView: View {
             case .local, .cli:
                 LocalTextSettingsView(model: model)
             case .api:
-                SettingsGroup(title: "文字 AI API", detail: "逐字稿、個人詞典與提問時選取的文字會送至這個服務。支援 /chat/completions，也可連接本機模型服務。") {
+                SettingsGroup(title: "文字 AI API", detail: "逐字稿、個人辭典與提問時選取的文字會送至這個服務。支援 /chat/completions，也可連接本機模型服務。") {
                     SettingsBlock { APISettingsFields(settings: $model.settings.textAPI, account: "text", model: model) }
                 }
             }
@@ -187,7 +187,7 @@ struct DictionaryView: View {
     @State private var replacement = ""
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
-            SettingsGroup(title: "新增詞彙", detail: "繁體中文模式請使用繁體字，詞典會套用至辨識結果並提供給系統辨識與文字 AI 作為提示。") {
+            SettingsGroup(title: "新增詞彙", detail: "繁體中文模式請使用繁體字，辭典會套用至辨識結果並提供給系統辨識與文字 AI 作為提示。") {
                 SettingsBlock {
                     HStack(alignment: .bottom, spacing: 12) {
                         LabeledField("辨識文字", placeholder: "例如：海帶", text: $heard)
@@ -200,7 +200,7 @@ struct DictionaryView: View {
                     }
                 }
             }
-            SettingsGroup(title: "個人詞典", detail: "標示為自動加入的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。新學到的詞彙標示為待確認，按下確認後才會套用。") {
+            SettingsGroup(title: "個人辭典", detail: "標示為自動加入的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。新學到的詞彙標示為待確認，按下確認後才會套用。") {
                 if model.settings.dictionary.isEmpty {
                     SettingsBlock {
                         Label("尚無詞彙，請新增經常辨識錯誤的人名或術語。", systemImage: "character.book.closed")
@@ -265,7 +265,7 @@ struct GeneralSettingsView: View {
                     Toggle("聽寫與翻譯完成後，自動插入原本的文字框", isOn: $model.settings.autoInsert).labelsHidden()
                 }
                 SettingsRow(title: "從修改內容自動學習詞彙",
-                            detail: "插入文字後，Hyday Talk 會讀取該輸入框的內容並與插入文字比對，僅將修正過的詞彙加入個人詞典，不保存其他內容。") {
+                            detail: "插入文字後，Hyday Talk 會讀取該輸入框的內容並與插入文字比對，僅將修正過的詞彙加入個人辭典，不保存其他內容。") {
                     Toggle("從修改內容自動學習詞彙", isOn: $model.settings.learnsFromCorrections).labelsHidden()
                 }
                 SettingsRow(title: "在這台 Mac 保留文字紀錄") {
