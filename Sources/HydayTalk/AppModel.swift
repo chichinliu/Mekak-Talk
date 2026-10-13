@@ -65,6 +65,11 @@ final class AppModel: ObservableObject {
     private var correctionTimer: Timer?
     private var correctionTask: Task<Void, Never>?
     private var sessionSettings = TalkSettings()
+    private var sessionHints: [String] = []
+    /// Entities and tags from the Hyday folder; only ever used as recognition hints.
+    @Published private(set) var hydayVocabulary: [String] = []
+    @Published private(set) var scanningHydayVocabulary = false
+    private var vocabularyTask: Task<Void, Never>?
     @Published private(set) var usage = UsageLedger()
     private var workspaceObservers: [NSObjectProtocol] = []
 
@@ -111,6 +116,7 @@ final class AppModel: ObservableObject {
         }
         TextInsertion.startTracking()
         refreshPermissions()
+        reloadHydayVocabulary()
         permissionsTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refreshPermissions() }
         }
@@ -218,6 +224,17 @@ final class AppModel: ObservableObject {
         return HydayVault.configuredRoot()
     }
 
+    func reloadHydayVocabulary() {
+        vocabularyTask?.cancel()
+        guard let root = hydayRoot else { hydayVocabulary = []; return }
+        scanningHydayVocabulary = true
+        vocabularyTask = Task {
+            let terms = try? await Task.detached(priority: .utility) { try HydayVocabulary.scan(root: root) }.value
+            guard !Task.isCancelled else { return }
+            hydayVocabulary = terms ?? []; scanningHydayVocabulary = false
+        }
+    }
+
     func begin(action: VoiceAction = .dictate) {
         guard !phase.busy else { return }
         if action == .hyday, hydayRoot == nil {
@@ -239,6 +256,8 @@ final class AppModel: ObservableObject {
         if target?.secure == true { fail(TalkError("這是密碼欄位。請改在一般文字輸入框使用。")); return }
         sessionID = UUID(); let current = sessionID
         sessionSettings = snapshot; self.action = action
+        sessionHints = RecognitionHints.terms(dictionary: snapshot.dictionary, vocabulary: hydayVocabulary)
+        let hints = sessionHints
         result = ""; transcript = ""; notice = ""; elapsed = 0; level = 0
         destination = action == .hyday ? "Hyday"
             : (snapshot.autoInsert && action != .ask && (target?.editable != true || target?.element == nil)
@@ -260,7 +279,7 @@ final class AppModel: ObservableObject {
                 }
                 try Task.checkCancellation()
                 guard sessionID == current else { return }
-                refreshPermissions(); try audio.start(settings: snapshot)
+                refreshPermissions(); try audio.start(settings: snapshot, hints: hints)
                 started = Date(); phase = .recording
                 if snapshot.interactionSounds { NSSound(named: "Tink")?.play() }
                 recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
@@ -284,7 +303,7 @@ final class AppModel: ObservableObject {
         recordingTimer?.invalidate(); recordingTimer = nil
         elapsed = Date().timeIntervalSince(started); audio.stop(); level = 0
         let duration = elapsed; let current = sessionID; let snapshot = sessionSettings
-        let voiceAction = action; let inputTarget = target
+        let voiceAction = action; let inputTarget = target; let hints = sessionHints
         phase = .transcribing; onPanelChange?()
         if snapshot.interactionSounds { NSSound(named: "Pop")?.play() }
         operation = Task {
@@ -298,7 +317,7 @@ final class AppModel: ObservableObject {
                 else {
                     let file = try await audio.audioFile()
                     raw = try await SpeechTranscription.transcribe(file: file, settings: snapshot,
-                        key: snapshot.speechBackend == .api ? KeyStore.read("speech") : "")
+                        key: snapshot.speechBackend == .api ? KeyStore.read("speech") : "", hints: hints)
                 }
                 try Task.checkCancellation(); guard sessionID == current else { return }
                 guard !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw TalkError("沒有辨識到文字，請再試一次。") }
@@ -422,7 +441,12 @@ final class AppModel: ObservableObject {
     }
 
     private func process(text: String, selection: String, action: VoiceAction, settings: TalkSettings) async throws -> String {
-        let prompt = try TextProcessing.prompt(action: action, transcript: text, selection: selection, settings: settings)
+        var notes: [HydayNote]?
+        if action == .ask, settings.asksHydayNotes, settings.textBackend != .basic, let root = hydayRoot {
+            notes = await HydaySearchService.notes(root: root, query: String([text, selection].filter { !$0.isEmpty }.joined(separator: " ").prefix(200)))
+            try Task.checkCancellation()
+        }
+        let prompt = try TextProcessing.prompt(action: action, transcript: text, selection: selection, settings: settings, notes: notes)
         return settings.textBackend == .basic ? text : try await complete(prompt: prompt, settings: settings)
     }
 

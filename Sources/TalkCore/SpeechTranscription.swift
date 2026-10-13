@@ -5,7 +5,7 @@ public enum SpeechTranscription {
         _ = try await ProcessRunner.run(executable: "/usr/bin/afconvert", arguments: ["-f", "WAVE", "-d", "LEI16@16000", "-c", "1", source.path, output.path], timeout: 20)
     }
 
-    public static func transcribe(file: URL, settings: TalkSettings, key: String = "",
+    public static func transcribe(file: URL, settings: TalkSettings, key: String = "", hints: [String]? = nil,
                                   session: URLSession = .shared) async throws -> String {
         let output: String
         switch settings.speechBackend {
@@ -32,7 +32,7 @@ public enum SpeechTranscription {
             let data = try Data(contentsOf: file)
             guard data.count <= 25_000_000 else { throw TalkError("錄音檔超過上傳大小限制。請縮短錄音。") }
             output = try await APIClient.transcription(audio: data, settings: settings.speechAPI, key: key,
-                language: settings.languageCode, dictionary: settings.dictionary.map(\.replacement), session: session)
+                language: settings.languageCode, dictionary: hints ?? settings.dictionary.map(\.replacement), session: session)
         }
         return try validatedText(output)
     }

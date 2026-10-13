@@ -184,6 +184,12 @@ public struct TalkSettings: Codable, Equatable, Sendable {
     var typingSpeed: Int?
     /// A folder chosen in the Hyday page; nil follows Hyday's own `vault.root`.
     public var hydayFolder: String?
+    var askHydayNotes: Bool?
+    /// Text questions answer from notes found in the Hyday folder; off by default.
+    public var asksHydayNotes: Bool {
+        get { askHydayNotes ?? false }
+        set { askHydayNotes = newValue }
+    }
     /// Used to estimate time saved; 40 sits in the common 20–50 range for Taiwanese Zhuyin typists.
     public var typingWordsPerMinute: Int {
         get { typingSpeed ?? 40 }
