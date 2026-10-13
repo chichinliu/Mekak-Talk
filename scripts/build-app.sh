@@ -38,9 +38,9 @@ cp .build/transcribe-runtime/source/LICENSE "$STAGED_APP/Contents/Resources/Tran
 cp Resources/Info.plist "$STAGED_APP/Contents/Info.plist"
 cat Sources/HydayTalk/DesignTokens.swift scripts/make-icon.swift > "$PACKAGE_STAGE/make-icon.swift"
 swift "$PACKAGE_STAGE/make-icon.swift" "$STAGED_APP/Contents/Resources/AppIcon.icns"
-codesign --force --sign "$SIGNING_IDENTITY" --options runtime "$STAGED_APP/Contents/Helpers/whisper-cli"
-codesign --force --sign "$SIGNING_IDENTITY" --options runtime "$STAGED_APP/Contents/Helpers/transcribe-cli"
-codesign --force --sign "$SIGNING_IDENTITY" --options runtime --entitlements Resources/HydayTalk.entitlements "$STAGED_APP"
+codesign --force --timestamp --sign "$SIGNING_IDENTITY" --options runtime "$STAGED_APP/Contents/Helpers/whisper-cli"
+codesign --force --timestamp --sign "$SIGNING_IDENTITY" --options runtime "$STAGED_APP/Contents/Helpers/transcribe-cli"
+codesign --force --timestamp --sign "$SIGNING_IDENTITY" --options runtime --entitlements Resources/HydayTalk.entitlements "$STAGED_APP"
 codesign --verify --strict "$STAGED_APP"
 ensure_app_stopped
 if [[ -e "$APP_DIR" ]]; then mv "$APP_DIR" "$PACKAGE_STAGE/previous.app"; fi
