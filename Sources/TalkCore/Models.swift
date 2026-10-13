@@ -198,8 +198,8 @@ public struct TalkSettings: Codable, Equatable, Sendable {
     public var activeDictionary: [DictionaryEntry] { dictionary.filter { !$0.isPending } }
     public var languageCode: String { String(locale.prefix(2)) }
     public func requiresTextModel(for action: VoiceAction) -> Bool {
-        // Hyday entries are stored as one cleaned list item until Life Log formatting exists.
-        if action == .hyday { return false }
+        // Without a text AI, Hyday entries are stored as one cleaned list item.
+        if action == .hyday { return textBackend != .basic }
         return action != .dictate || (textBackend != .basic && writingStyle != .verbatim)
     }
 }

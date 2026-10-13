@@ -282,7 +282,8 @@ final class AppModel: ObservableObject {
     func finish() {
         guard phase == .recording else { return }
         recordingTimer?.invalidate(); recordingTimer = nil
-        elapsed = Date().timeIntervalSince(started); audio.stop(); level = 0
+        let spokeAt = Date()
+        elapsed = spokeAt.timeIntervalSince(started); audio.stop(); level = 0
         let duration = elapsed; let current = sessionID; let snapshot = sessionSettings
         let voiceAction = action; let inputTarget = target
         phase = .transcribing; onPanelChange?()
@@ -305,16 +306,19 @@ final class AppModel: ObservableObject {
                 transcript = raw
                 let cleaned = TextProcessing.clean(raw, settings: snapshot)
                 var output = cleaned
+                var aiFormatted = false
                 if snapshot.requiresTextModel(for: voiceAction) && snapshot.textBackend != .basic {
                     phase = .processing
                     do {
                         let processed = try await process(text: cleaned, selection: inputTarget?.selection ?? "", action: voiceAction, settings: snapshot)
                         output = voiceAction == .dictate ? try TextProcessing.checkedDictationOutput(processed, source: cleaned) : processed
+                        aiFormatted = true
                     }
                     catch is CancellationError { throw CancellationError() }
                     catch {
                         result = cleaned
                         if voiceAction == .dictate { notice = "AI 整理未完成，已保留原始辨識文字。" }
+                        else if voiceAction == .hyday { notice = "AI 整理未完成，已記成一般列點。" }
                         else { throw error }
                     }
                 }
@@ -324,12 +328,13 @@ final class AppModel: ObservableObject {
                 var delivered = false
                 if voiceAction == .hyday {
                     // Kept as the result first, so a failed write still leaves the text to copy.
-                    let entry = HydayVault.bullet(output); result = entry
+                    let formatted = aiFormatted ? HydayEntryFormatting.entry(output, time: HydayEntryFormatting.time(spokeAt)) : ""
+                    let entry = formatted.isEmpty ? HydayVault.bullet(output) : formatted; result = entry
                     guard let root = hydayRoot else { throw TalkError("找不到 Hyday 資料夾，請到 Hyday 頁重新設定。") }
                     try await Task.detached(priority: .userInitiated) {
                         try HydayVault(root: root).appendToJournal(entry)
                     }.value
-                    notice = "已記到 Hyday 今天的日誌。"
+                    notice = notice.isEmpty ? "已記到 Hyday 今天的日誌。" : notice + " 已記到 Hyday 今天的日誌。"
                 } else if snapshot.autoInsert && voiceAction != .ask {
                     let message: String
                     do {
