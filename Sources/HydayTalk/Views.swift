@@ -94,7 +94,10 @@ struct MainView: View {
         Button { page = item } label: {
             HStack(spacing: 12) {
                 if item == .hyday, let icon = HydayBrand.icon {
-                    Image(nsImage: icon).resizable().interpolation(.high).frame(width: 18, height: 18).frame(width: 20)
+                    Image(nsImage: icon).resizable().interpolation(.high).aspectRatio(contentMode: .fit)
+                        // The icon is full-bleed, so match the optical size of the 16 pt line icons.
+                        .frame(width: 16, height: 16).clipShape(RoundedRectangle(cornerRadius: 4))
+                        .frame(width: 20, height: 20)
                 } else {
                     Image(systemName: item.symbol).font(.system(size: 16, weight: .regular))
                         .foregroundStyle(page == item ? Palette.accent : Palette.ink.opacity(0.78)).frame(width: 20)

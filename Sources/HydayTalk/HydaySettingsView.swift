@@ -3,12 +3,10 @@ import AppKit
 import TalkCore
 
 enum HydayBrand {
-    /// Hyday's own app icon when Hyday is installed.
-    static let icon: NSImage? = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.hyday.app")
-        .flatMap { NSWorkspace.shared.icon(forFile: $0.path) }
-        ?? ["/Applications/Hyday.app", NSHomeDirectory() + "/Applications/Hyday.app"]
-            .first { FileManager.default.fileExists(atPath: $0) }
-            .map { NSWorkspace.shared.icon(forFile: $0) }
+    /// Hyday's own icon from the installed app. Read from the bundle directly: looking it up by
+    /// bundle ID can resolve to a development build that still carries a placeholder icon.
+    static let icon: NSImage? = ["/Applications/Hyday.app", NSHomeDirectory() + "/Applications/Hyday.app"]
+        .lazy.compactMap { NSImage(contentsOfFile: $0 + "/Contents/Resources/icon.icns") }.first
 }
 
 struct HydaySettingsView: View {
