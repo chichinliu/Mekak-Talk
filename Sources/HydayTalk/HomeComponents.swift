@@ -96,7 +96,7 @@ struct HomeStatsCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(stats.todayWords)").font(.system(size: 44, weight: .light)).monospacedDigit()
                     .tracking(-1.5).contentTransition(.numericText())
-                Text("今天語音輸入 \(stats.todayCount) 次").font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+                Text("今天用了 \(stats.todayCount) 次的語音輸入").font(Typography.font(.caption)).foregroundStyle(Palette.muted)
             }
             chart
             VStack(spacing: 0) {
