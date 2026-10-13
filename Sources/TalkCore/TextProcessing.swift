@@ -4,7 +4,9 @@ public enum TextProcessing {
     private static let literalPatterns = [#"\d+(?:[.,:/-]\d+)*%?"#, #"[A-Za-z][A-Za-z0-9_]*(?:\+\+)?"#]
 
     private static func literals(_ text: String) -> Set<String> {
-        Set(literalPatterns.flatMap { pattern in
+        // Full-width and ASCII percent signs are the same literal.
+        let text = text.replacingOccurrences(of: "％", with: "%")
+        return Set(literalPatterns.flatMap { pattern in
             let regex = try! NSRegularExpression(pattern: pattern)
             return regex.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap {
                 Range($0.range, in: text).map { String(text[$0]) }

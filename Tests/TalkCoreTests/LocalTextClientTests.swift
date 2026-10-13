@@ -99,6 +99,9 @@ final class LocalTextClientTests: XCTestCase {
         XCTAssertThrowsError(try TextProcessing.checkedDictationOutput(String(repeating: "分析內容", count: 100), source: source))
         XCTAssertThrowsError(try TextProcessing.checkedDictationOutput("<think>分析</think>明天3點通知Amy，預算2,000元。", source: source))
         XCTAssertEqual(try TextProcessing.checkedDictationOutput("明天3點通知Amy，預算2,000元。", source: source), "明天3點通知Amy，預算2,000元。")
+        // Whisper writes a full-width percent sign; the text model often switches to the ASCII one.
+        XCTAssertEqual(try TextProcessing.checkedDictationOutput("段落中，22% 的停頓。", source: "段落中 22％ 的停頓"), "段落中，22% 的停頓。")
+        XCTAssertThrowsError(try TextProcessing.checkedDictationOutput("段落中，23% 的停頓。", source: "段落中 22％ 的停頓"))
         let list = "今天有三件事：\n第一，確認權限。\n第二，測試錄音。\n第三，檢查文字插入。"
         var settings = TalkSettings(); settings.textBackend = .local
         XCTAssertEqual(TextProcessing.formatOutput(list, action: .dictate, settings: settings),
