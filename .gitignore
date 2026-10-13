@@ -1,0 +1,9 @@
+.build/
+dist/
+.DS_Store
+.swiftpm/
+*.xcuserstate
+models/*.bin
+.local-signing-identity
+.impeccable/
+models/
