@@ -157,10 +157,12 @@ public enum RecognitionHints {
     /// Confirmed dictionary words first, then Hyday vocabulary, without duplicates.
     public static func terms(dictionary: [DictionaryEntry], vocabulary: [String], limit: Int = 100) -> [String] {
         var result: [String] = []
-        for term in dictionary.filter({ !$0.isPending }).map(\.replacement) + vocabulary
-        where !term.isEmpty && !result.contains(term) {
+        // Confirmed dictionary words are always hinted; Hyday vocabulary fills the rest up to the limit.
+        for term in dictionary.filter({ !$0.isPending }).map(\.replacement) where !term.isEmpty && !result.contains(term) {
             result.append(term)
-            if result.count >= limit { break }
+        }
+        for term in vocabulary where result.count < limit && !term.isEmpty && !result.contains(term) {
+            result.append(term)
         }
         return result
     }

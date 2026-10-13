@@ -26,16 +26,15 @@ enum HydaySearchService {
         if let notes = try? await search(root: root, query: query, timeout: 6), !notes.isEmpty {
             return Array(notes.prefix(limit))
         }
-        return (try? await Task.detached(priority: .userInitiated) {
-            try HydayNoteSearch.search(root: root, query: query, limit: limit)
-        }.value) ?? []
+        // Cancelling the question also stops the folder scan.
+        let scan = Task.detached(priority: .userInitiated) { try HydayNoteSearch.search(root: root, query: query, limit: limit) }
+        return (try? await withTaskCancellationHandler(operation: { try await scan.value }, onCancel: { scan.cancel() })) ?? []
     }
 
     static func search(root: URL, query: String, timeout: TimeInterval) async throws -> [HydayNote] {
         guard let (executable, bundle) = installation() else { throw Unavailable() }
         let runtime = FileManager.default.temporaryDirectory.appendingPathComponent("hyday-talk-mcp-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: runtime, withIntermediateDirectories: true)
-        defer { try? FileManager.default.removeItem(at: runtime) }
         let process = Process()
         process.executableURL = executable
         process.arguments = [bundle.path, root.path]
@@ -54,7 +53,13 @@ enum HydaySearchService {
                 guard !state.done else { return }
                 state.done = true
                 output.fileHandleForReading.readabilityHandler = nil
-                if process.isRunning { process.terminate() }
+                if process.isRunning {
+                    process.terminate()
+                    // A server that ignores SIGTERM is killed, so no search process outlives the question.
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+                        if process.isRunning { kill(process.processIdentifier, SIGKILL) }
+                    }
+                }
                 continuation.resume(with: result)
             }
             output.fileHandleForReading.readabilityHandler = { handle in
@@ -80,8 +85,13 @@ enum HydaySearchService {
                     return
                 }
             }
-            process.terminationHandler = { _ in finish(.failure(Unavailable())) }
-            do { try process.run() } catch { finish(.failure(Unavailable())); return }
+            process.terminationHandler = { _ in
+                finish(.failure(Unavailable()))
+                try? FileManager.default.removeItem(at: runtime)
+            }
+            do { try process.run() } catch {
+                try? FileManager.default.removeItem(at: runtime); finish(.failure(Unavailable())); return
+            }
             // The server answers in order, so initialize and the search can go out together.
             let messages: [[String: Any]] = [
                 ["jsonrpc": "2.0", "id": 1, "method": "initialize",
@@ -103,7 +113,7 @@ enum HydaySearchService {
 
         guard let hits = try JSONSerialization.jsonObject(with: Data(text.utf8)) as? [[String: Any]] else { throw Unavailable() }
         return hits.compactMap { hit in
-            guard let path = hit["relPath"] as? String, path.lowercased().hasSuffix(".md"),
+            guard let path = hit["relPath"] as? String, path.lowercased().hasSuffix(".md"), !path.hasPrefix("/"),
                   !path.split(separator: "/").contains(where: { $0 == "hyday-wiki" || $0 == ".." || $0.hasPrefix(".") })
             else { return nil }
             let name = ((path as NSString).lastPathComponent as NSString).deletingPathExtension

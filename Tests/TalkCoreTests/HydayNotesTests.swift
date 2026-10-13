@@ -96,4 +96,11 @@ final class HydayNotesTests: XCTestCase {
         let old = try JSONDecoder().decode(TalkSettings.self, from: JSONEncoder().encode(TalkSettings()))
         XCTAssertFalse(old.asksHydayNotes)
     }
+
+    func testRecognitionHintsNeverDropConfirmedDictionaryWords() {
+        let dictionary = (0..<120).map { DictionaryEntry(heard: "h\($0)", replacement: "詞\($0)") }
+        let hints = RecognitionHints.terms(dictionary: dictionary, vocabulary: ["Hyday"], limit: 100)
+        XCTAssertEqual(hints.count, 120)
+        XCTAssertFalse(hints.contains("Hyday"))
+    }
 }

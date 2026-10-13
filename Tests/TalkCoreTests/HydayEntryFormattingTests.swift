@@ -59,4 +59,8 @@ final class HydayEntryFormattingTests: XCTestCase {
         XCTAssertEqual(HydayEntryFormatting.entry("```markdown\n\n- [ ] 繳電費\n```", time: "10:00"), "- [ ] 繳電費")
         XCTAssertEqual(HydayEntryFormatting.entry("```\n\n```", time: "10:00"), "")
     }
+
+    func testABrokenMarkKeepsTheWordsInsideItsOwnParentheses() {
+        XCTAssertEqual(HydayEntryFormatting.entry("%(外層 (補充) 說明", time: "09:05"), "- 外層 (補充) 說明")
+    }
 }

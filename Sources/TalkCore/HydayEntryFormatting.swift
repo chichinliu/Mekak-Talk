@@ -86,9 +86,14 @@ public enum HydayEntryFormatting {
     /// Drops mark punctuation so Hyday does not read a broken mark, keeping the words.
     private static func plain(_ text: String) -> String {
         let range = NSRange(text.startIndex..., in: text)
-        return markOpener.stringByReplacingMatches(in: text, range: range, withTemplate: "")
-            .replacingOccurrences(of: ")", with: "").replacingOccurrences(of: "）", with: "")
-            .trimmingCharacters(in: .whitespaces)
+        var result = markOpener.stringByReplacingMatches(in: text, range: range, withTemplate: "")
+        // Remove only the closers left over from the marks, not parentheses the words use.
+        let opens = { (s: String) in s.filter { $0 == "(" || $0 == "（" }.count }
+        let closes = { (s: String) in s.filter { $0 == ")" || $0 == "）" }.count }
+        while closes(result) > opens(result), let last = result.lastIndex(where: { $0 == ")" || $0 == "）" }) {
+            result.remove(at: last)
+        }
+        return result.trimmingCharacters(in: .whitespaces)
     }
 
     private static func match(_ regex: NSRegularExpression, _ text: String) -> NSTextCheckingResult? {
