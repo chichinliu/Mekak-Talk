@@ -23,7 +23,7 @@ public enum TextProcessing {
     static func applyDictionary(_ text: String, settings: TalkSettings) -> String {
         var text = text
         // Match names as whole words in Latin scripts; Chinese terms have no word separators.
-        for entry in settings.dictionary.sorted(by: { $0.heard.count > $1.heard.count }) {
+        for entry in settings.activeDictionary.sorted(by: { $0.heard.count > $1.heard.count }) {
             guard !entry.heard.isEmpty, !entry.replacement.isEmpty else { continue }
             let literal = NSRegularExpression.escapedPattern(for: entry.heard)
             let latin = entry.heard.unicodeScalars.allSatisfy { $0.isASCII }
@@ -91,7 +91,7 @@ public enum TextProcessing {
                 : "根據語音指示處理選取文字（改寫、摘要、解釋或翻譯）。只輸出處理後的文字。"
         }
         var payload: [String: Any] = ["transcript": transcript, "selected_text": selection,
-                                      "dictionary": settings.dictionary.map { ["heard": $0.heard, "write": $0.replacement] }]
+                                      "dictionary": settings.activeDictionary.map { ["heard": $0.heard, "write": $0.replacement] }]
         if action == .dictate { payload["preserve_literals"] = literals(transcript).sorted() }
         let data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
         let traditional = action == .translate ? settings.targetLanguage == "台灣繁體中文" : settings.locale == "zh-TW"

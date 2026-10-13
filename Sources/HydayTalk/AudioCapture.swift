@@ -56,7 +56,7 @@ final class AudioCapture {
             bufferRequest.shouldReportPartialResults = true
             bufferRequest.requiresOnDeviceRecognition = settings.systemOfflineOnly
             bufferRequest.addsPunctuation = true
-            bufferRequest.contextualStrings = Array(settings.dictionary.map(\.replacement).prefix(100))
+            bufferRequest.contextualStrings = Array(settings.activeDictionary.map(\.replacement).prefix(100))
             request = bufferRequest
             recognition = recognizer.recognitionTask(with: bufferRequest) { [weak self] result, error in
                 Task { @MainActor in

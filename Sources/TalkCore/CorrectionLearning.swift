@@ -82,15 +82,33 @@ public enum CorrectionFinder {
 public enum DictionaryLearning {
     static let blockLimit = 200
 
+    /// Field text can come from someone else, so learned words are limited to plain names and terms.
+    static func isPlainTerm(_ text: String) -> Bool {
+        let allowed = CharacterSet.letters.union(.decimalDigits).union(CharacterSet(charactersIn: " -_.+&'·"))
+        return !text.isEmpty && text == text.trimmingCharacters(in: .whitespaces)
+            && text.unicodeScalars.allSatisfy { allowed.contains($0) }
+            && text.contains { $0.isLetter || $0.isNumber }
+    }
+
     public static func learn(_ correction: Correction, into settings: inout TalkSettings) {
+        guard isPlainTerm(correction.original), isPlainTerm(correction.corrected) else { return }
         let blocked = settings.blockedCorrections ?? []
         guard !blocked.contains(where: { $0.heard == correction.original && $0.replacement == correction.corrected }) else { return }
         if let index = settings.dictionary.firstIndex(where: { $0.heard == correction.original }) {
             guard settings.dictionary[index].isAutomatic else { return }
+            guard settings.dictionary[index].replacement != correction.corrected else { return }
             settings.dictionary[index].replacement = correction.corrected
+            settings.dictionary[index].pending = true
         } else {
-            settings.dictionary.append(DictionaryEntry(heard: correction.original, replacement: correction.corrected, isAutomatic: true))
+            var entry = DictionaryEntry(heard: correction.original, replacement: correction.corrected, isAutomatic: true)
+            entry.pending = true
+            settings.dictionary.append(entry)
         }
+    }
+
+    public static func confirm(_ entry: DictionaryEntry, in settings: inout TalkSettings) {
+        guard let index = settings.dictionary.firstIndex(where: { $0.id == entry.id }) else { return }
+        settings.dictionary[index].pending = nil
     }
 
     /// Removing a learned entry also stops the same correction from being learned again.

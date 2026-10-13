@@ -171,6 +171,8 @@ enum TextInsertion {
         return String(utf16[start..<end])
     }
 
+    static func caretLocation(_ element: AXUIElement) -> Int? { range(element).map { Int($0.location) } }
+
     static func isEditing(_ element: AXUIElement, pid: pid_t) -> Bool {
         guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid,
               let current = focusedElement(pid: pid) else { return false }

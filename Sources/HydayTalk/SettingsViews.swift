@@ -192,7 +192,7 @@ struct DictionaryView: View {
                     }
                 }
             }
-            SettingsGroup(title: "個人詞典", detail: "標示為自動加入的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。") {
+            SettingsGroup(title: "個人詞典", detail: "標示為自動加入的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。新學到的詞彙標示為待確認，按下確認後才會套用。") {
                 if model.settings.dictionary.isEmpty {
                     SettingsBlock {
                         Label("尚無詞彙，請新增經常辨識錯誤的人名或術語。", systemImage: "character.book.closed")
@@ -211,12 +211,20 @@ struct DictionaryView: View {
                             Image(systemName: "arrow.right").font(IconToken.font(.small)).foregroundStyle(Palette.faint).frame(width: 14)
                             HStack(spacing: 8) {
                                 Text(entry.replacement)
-                                if entry.isAutomatic {
+                                if entry.isPending {
+                                    Text("待確認").font(Typography.font(.caption, weight: .medium)).foregroundStyle(Palette.warningInk)
+                                        .padding(.horizontal, 8).padding(.vertical, 2)
+                                        .background(Palette.warningSurface, in: Capsule())
+                                } else if entry.isAutomatic {
                                     Text("自動加入").font(Typography.font(.caption, weight: .medium)).foregroundStyle(Palette.actionInk)
                                         .padding(.horizontal, 8).padding(.vertical, 2)
                                         .background(Palette.surface, in: Capsule()).shadow(color: Color.black.opacity(0.06), radius: 1.5, y: 1)
                                 }
                             }.frame(maxWidth: .infinity, alignment: .leading)
+                            if entry.isPending {
+                                Button("確認") { DictionaryLearning.confirm(entry, in: &model.settings) }
+                                    .buttonStyle(AlignButtonStyle(kind: .primary)).accessibilityLabel("確認詞彙 \(entry.heard)")
+                            }
                             Button { DictionaryLearning.remove(entry, from: &model.settings) } label: { Image(systemName: "trash").frame(width: 20, height: 20) }
                                 .buttonStyle(AlignButtonStyle(kind: .ghost)).help("刪除詞彙 \(entry.heard)").accessibilityLabel("刪除詞彙 \(entry.heard)")
                         }.font(Typography.font(.body)).padding(.vertical, 8)

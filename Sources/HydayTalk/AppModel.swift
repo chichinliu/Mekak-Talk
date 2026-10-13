@@ -406,6 +406,8 @@ final class AppModel: ObservableObject {
         let location: Int
         let inserted: String
         let expires: Date
+        /// Set once the caret moves inside the field, so edits made by someone else are not learned.
+        var userEdited = false
     }
 
     private func watchCorrections(of inserted: String, at target: InputTarget?, settings: TalkSettings) {
@@ -428,14 +430,22 @@ final class AppModel: ObservableObject {
     private func checkCorrectionsIfLeft() {
         guard let pending = pendingCorrection else { stopWatchingCorrections(); return }
         if Date() > pending.expires { stopWatchingCorrections(); return }
-        if !TextInsertion.isEditing(pending.element, pid: pending.pid) { checkCorrections() }
+        guard TextInsertion.isEditing(pending.element, pid: pending.pid) else { checkCorrections(); return }
+        if let caret = TextInsertion.caretLocation(pending.element), caret != pending.location + pending.inserted.utf16.count {
+            pendingCorrection?.userEdited = true
+        }
     }
 
     /// Reads the field once, after the user left it or started the next dictation; unreadable fields are skipped silently.
     private func checkCorrections() {
-        guard let pending = pendingCorrection else { return }
+        guard var pending = pendingCorrection else { return }
         stopWatchingCorrections()
-        guard Date() <= pending.expires,
+        // The next fn press can arrive between samples; check the caret one last time.
+        if TextInsertion.isEditing(pending.element, pid: pending.pid),
+           let caret = TextInsertion.caretLocation(pending.element), caret != pending.location + pending.inserted.utf16.count {
+            pending.userEdited = true
+        }
+        guard Date() <= pending.expires, pending.userEdited,
               let following = TextInsertion.readBack(pending.element, from: pending.location, length: pending.inserted.utf16.count + 200)
         else { return }
         let corrections = CorrectionFinder.find(inserted: pending.inserted, following: following)

@@ -138,7 +138,10 @@ public struct DictionaryEntry: Codable, Identifiable, Equatable, Sendable {
     public var replacement: String
     /// Absent in settings saved before automatic learning existed.
     var automatic: Bool?
+    /// Learned entries wait for the user's confirmation before they change any text.
+    var pending: Bool?
     public var isAutomatic: Bool { automatic == true }
+    public var isPending: Bool { pending == true }
     public init(heard: String, replacement: String, isAutomatic: Bool = false) {
         self.heard = heard; self.replacement = replacement; automatic = isAutomatic ? true : nil
     }
@@ -187,6 +190,8 @@ public struct TalkSettings: Codable, Equatable, Sendable {
         set { learnFromCorrections = newValue }
     }
     public init() {}
+    /// Entries that take effect: everything except learned entries still awaiting confirmation.
+    public var activeDictionary: [DictionaryEntry] { dictionary.filter { !$0.isPending } }
     public var languageCode: String { String(locale.prefix(2)) }
     public func requiresTextModel(for action: VoiceAction) -> Bool {
         action != .dictate || (textBackend != .basic && writingStyle != .verbatim)
