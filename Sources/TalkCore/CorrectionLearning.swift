@@ -13,7 +13,6 @@ public struct Correction: Equatable, Sendable {
 
 public enum CorrectionFinder {
     static let maximumLength = 12
-    static let maximumCorrections = 3
 
     /// `following` is the field text starting where the insertion began; anything typed after the inserted passage is ignored.
     public static func find(inserted: String, following: String) -> [Correction] {
@@ -22,7 +21,7 @@ public enum CorrectionFinder {
         let pairs = matches(old, window)
         let content = old.indices.filter { isContent(old[$0]) }
         let kept = pairs.filter { isContent(old[$0.0]) }.count
-        guard let last = pairs.last, kept * 2 >= content.count else { return [] }
+        guard let last = pairs.last else { return [] }
         // A replaced word at the very end has no anchor after it: take the same run of window tokens,
         // stopping at a space, punctuation or script change so text typed afterwards is not swallowed.
         var end = last.1 + 1
@@ -33,19 +32,24 @@ public enum CorrectionFinder {
                   (window[end].first?.isASCII == true) == latin { end += 1 }
         }
         let context = window[..<end].joined().trimmingCharacters(in: .whitespacesAndNewlines)
-        var found: [Correction] = [], changes = 0
+        // Judged on the passage as a whole: keeping less than a fifth, removing more than half,
+        // or changing more than twice its length is a rewrite rather than a fix.
+        let edited = window[..<end].filter(isContent).count, removed = content.count - kept
+        let added = edited - pairs.filter { isContent(window[$0.1]) && $0.1 < end }.count
+        guard edited * 5 >= content.count, removed * 2 <= content.count,
+              removed + added <= content.count * 2 else { return [] }
+        var found: [Correction] = []
         var previous = (-1, -1)
         for pair in pairs + [(old.count, end)] {
             let removed = old[(previous.0 + 1)..<pair.0].joined().trimmingCharacters(in: .whitespacesAndNewlines)
             let added = window[(previous.1 + 1)..<min(pair.1, window.count)].joined().trimmingCharacters(in: .whitespacesAndNewlines)
             previous = pair
             guard (removed + added).contains(where: { $0.isLetter || $0.isNumber }) else { continue }
-            changes += 1
             guard !removed.isEmpty, !added.isEmpty, removed != added,
                   removed.count <= maximumLength, added.count <= maximumLength else { continue }
             found.append(Correction(original: removed, corrected: added, context: context))
         }
-        return changes > maximumCorrections ? [] : found
+        return found
     }
 
     private static func isContent(_ token: String) -> Bool { token.contains { $0.isLetter || $0.isNumber } }

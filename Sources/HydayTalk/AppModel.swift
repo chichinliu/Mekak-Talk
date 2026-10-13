@@ -100,6 +100,7 @@ final class AppModel: ObservableObject {
         }
         shortcuts.isBusy = { [weak self] in self?.phase.busy == true }
         shortcuts.onAvailability = { [weak self] in self?.shortcutReady = $0 }
+        shortcuts.onReturnKey = { [weak self] in self?.checkCorrectionsBeforeReturn() }
         shortcuts.onAction = { [weak self] shortcut in
             guard let self else { return }
             switch shortcut {
@@ -510,6 +511,12 @@ final class AppModel: ObservableObject {
         if let caret = TextInsertion.caretLocation(pending.element), caret != pending.location + pending.inserted.utf16.count {
             pendingCorrection?.userEdited = true
         }
+    }
+
+    /// Return often sends and clears a chat or terminal box, so the field is read before the key reaches it.
+    private func checkCorrectionsBeforeReturn() {
+        guard let pending = pendingCorrection, TextInsertion.isEditing(pending.element, pid: pending.pid) else { return }
+        checkCorrections()
     }
 
     /// Reads the field once, after the user left it or started the next dictation; unreadable fields are skipped silently.

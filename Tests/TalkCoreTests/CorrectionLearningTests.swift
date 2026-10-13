@@ -30,9 +30,17 @@ final class CorrectionFinderTests: XCTestCase {
         XCTAssertEqual(pairs("請確認文件。", "請確認這份非常非常長而且完全不同的新版規格文件。"), [])
     }
 
-    func testMoreThanThreeChangesIsTreatedAsRewrite() {
-        XCTAssertEqual(pairs("甲找乙和丙談丁的事。", "子找丑和寅談卯的事。"), [])
-        XCTAssertEqual(pairs("A 找 B 和 C 談 D 的事。", "W 找 X 和 Y 談 Z 的事。"), [])
+    func testSeveralFixesInALongPassageAreAllLearned() {
+        XCTAssertEqual(pairs("今天和 Jeny、Haidai、Mukki、Jhon 一起看 Figmaa 的稿子，下午再跟大家確認上線的時間。",
+                             "今天和 Jenny、Hyday、Muki、John 一起看 Figma 的稿子，下午再跟大家確認上線的時間。"),
+                       ["Jeny→Jenny", "Haidai→Hyday", "Mukki→Muki", "Jhon→John", "Figmaa→Figma"])
+    }
+
+    func testRewritingMostOfThePassageIsNotLearned() {
+        // More than half of the inserted text removed.
+        XCTAssertEqual(pairs("A 找 B 和 C 談 D 的事。", "W 叫 X 跟 Y 聊 Z 那件事。"), [])
+        // The field kept less than a fifth of what was inserted.
+        XCTAssertEqual(pairs("今天下午三點和設計團隊確認首頁的改版方向與上線時間。", "Hyday"), [])
     }
 
     func testCorrectionAtTheVeryEndIsFound() {

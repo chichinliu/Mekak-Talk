@@ -13,6 +13,8 @@ final class GlobalShortcuts {
     var isBusy: () -> Bool = { false }
     var onAction: ((ShortcutAction) -> Void)?
     var onAvailability: ((Bool) -> Void)?
+    /// Called inside the tap, before the app receives Return, so a chat box can still be read before it sends and clears.
+    var onReturnKey: (() -> Void)?
 
     @discardableResult func start() -> Bool {
         if tap != nil { return true }
@@ -74,6 +76,7 @@ final class GlobalShortcuts {
             action = state.keyDown(code: code, repeated: repeated, recording: isBusy())
             if code == 49, state.fnDown { swallowedSpace = true; consume = true }
             if code == 53, isBusy() { swallowedEscape = true; consume = true }
+            if (code == 36 || code == 76), !repeated, action == nil { onReturnKey?() }
         } else if type == .keyUp {
             if code == 49, swallowedSpace { swallowedSpace = false; consume = true }
             if code == 53, swallowedEscape { swallowedEscape = false; consume = true }
