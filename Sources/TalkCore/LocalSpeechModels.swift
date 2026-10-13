@@ -1,6 +1,9 @@
 import Foundation
 import CryptoKit
 
+/// whisper.cpp runs GGML `.bin` Whisper models; transcribe.cpp runs GGUF Qwen3-ASR models.
+public enum SpeechEngine: Sendable { case whisper, qwen }
+
 public struct LocalSpeechModel: Identifiable, Equatable, Sendable {
     public let id: String
     public let title: String
@@ -9,6 +12,10 @@ public struct LocalSpeechModel: Identifiable, Equatable, Sendable {
     public let bytes: Int64
     public let sha256: String
     public let repository: String
+    public var engine: SpeechEngine { Self.engine(forModelPath: filename) }
+    public static func engine(forModelPath path: String) -> SpeechEngine {
+        path.lowercased().hasSuffix(".gguf") ? .qwen : .whisper
+    }
     public var downloadURL: URL {
         URL(string: "https://huggingface.co/\(repository)/resolve/main/\(filename)")!
     }
@@ -20,7 +27,15 @@ public struct LocalSpeechModel: Identifiable, Equatable, Sendable {
     public static let small = LocalSpeechModel(id: "small", title: "Whisper Small",
         detail: "較小的多語模型，適合減少儲存空間。", filename: "ggml-small.bin", bytes: 487_601_967,
         sha256: "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b")
-    public static let all: [LocalSpeechModel] = [recommended, small]
+    public static let qwenSmall = LocalSpeechModel(id: "qwen3-asr-0.6b-q8_0", title: "Qwen3-ASR 0.6B",
+        detail: "中文口語與中英夾雜辨識較準，速度快。", filename: "Qwen3-ASR-0.6B-Q8_0.gguf", bytes: 850_423_456,
+        sha256: "f081b2d5e23bd669d92cc331d722a8a0681943b8e6f34b48996fd5c319b5acd8",
+        repository: "handy-computer/Qwen3-ASR-0.6B-gguf")
+    public static let qwenLarge = LocalSpeechModel(id: "qwen3-asr-1.7b-q6_k", title: "Qwen3-ASR 1.7B",
+        detail: "辨識最準確，需要較多儲存空間與記憶體。", filename: "Qwen3-ASR-1.7B-Q6_K.gguf", bytes: 1_692_554_208,
+        sha256: "c75a961b7134a6c952d89797865cb0d0376876185aee04ef6d12c31c2952e4e1",
+        repository: "handy-computer/Qwen3-ASR-1.7B-gguf")
+    public static let all: [LocalSpeechModel] = [recommended, qwenSmall, qwenLarge, small]
 
     public init(id: String, title: String, detail: String, filename: String, bytes: Int64, sha256: String,
                 repository: String = "ggerganov/whisper.cpp") {

@@ -425,7 +425,7 @@ final class AppModel: ObservableObject {
         switch settings.speechBackend {
         case .system: break
         case .whisper:
-            guard localModels.engineReady else { throw TalkError("辨識引擎尚未就緒，請重新安裝 Hyday Talk。") }
+            guard localModels.engineReady(for: settings.whisperModel) else { throw TalkError("辨識引擎尚未就緒，請重新安裝 Hyday Talk。") }
             guard SpeechCLIConfiguration.isReadableModel(settings.whisperModel) else {
                 throw TalkError("請在「語音辨識」下載並選擇本機模型。")
             }

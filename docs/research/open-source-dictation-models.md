@@ -40,3 +40,46 @@ SenseVoice Small 官方支援國語、粵語、英文、日文、韓文，是另
 tiny 可繼續做工程試跑，但選定日常預設前，應用相同的台灣口語、中英混說、個人專名錄音，檢查漏字／錯字、繁簡字、台灣用詞、空音訊誤輸出及停止錄音後等待時間。App 模型選單裡的 accuracy／speed 分數不是我們自己的測試結果，不拿來做品質排名。繁體轉換、詞典替換和選用 LLM 整理繼續分開處理。
 
 如果日後想直接使用 Handy 的 GGUF 生態，再評估新增 transcribe.cpp 後端；這涉及另一套模型載入與 CLI 契約，不是只換 `.bin` 路徑。這次研究沒有修改 App 程式或模型設定。
+
+## 補充：中文聽寫工具改用 Qwen3-ASR
+
+查證日期：2026-10-13。實測 Breeze ASR 25 後，使用者認為辨識效果沒有比 Whisper Large v3 Turbo 好，因此 Breeze 已從 App 移除；這次改查以中文使用者為主的開源 Typeless 替代工具
+
+近半年中文社群的開源聽寫工具，大多從 Whisper 改用 Qwen3-ASR
+
+| 開源工具 | 平台 | 語音辨識模型 | 備註 |
+| --- | --- | --- | --- |
+| [moqi-voice-typing](https://github.com/DDChen666/moqi-voice-typing)／MIT | Mac、Windows | 致謝 Qwen3-ASR 與 transcribe.cpp | 繁中介面，專為中英夾雜設計；作者以 30 段中英混說錄音比較 8 個本機模型後選定，未公開比較結果 |
+| [SayIt](https://github.com/50955045/SayIt-) | 自架後端 | Qwen3-ASR，以 vLLM 推論 | 作者認為是開源模型中效果最好的選擇 |
+| [ThunderTalk](https://github.com/realAllenSong/ThunderTalk)／MIT | Mac | Qwen3-ASR、SenseVoice、Parakeet、MOSS | 全本機執行 |
+| [CapsWriter macOS](https://github.com/HaujetZhao/CapsWriter-Offline/issues/381) | Mac | Qwen3-ASR，以 MLX 推論 | 原 Windows 版使用 SenseVoice 與 Paraformer |
+| Saymore（[阿里雲橫評](https://developer.aliyun.com/article/1770331)） | Windows | 本機 Qwen3-ASR，約 1.5 GB | 支援術語與熱詞 |
+| [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp)／MIT | 跨平台 | 支援 Qwen3-ASR 0.6B 與 1.7B 等多種模型 | Handy 使用的推論引擎 |
+
+VoiceInk、OpenWhispr、open-wispr 仍以 Whisper 為主，中文沒有特別處理
+
+### Qwen3-ASR
+
+阿里巴巴 Qwen 團隊於 2026 年 1 月開源，Apache 2.0 授權，分為 0.6B 與 1.7B，支援 30 種語言與 22 種中文方言，同一個模型可離線或串流辨識。[官方 GitHub](https://github.com/QwenLM/Qwen3-ASR)
+
+官方公布的中文 WER，Qwen3-ASR 1.7B 對 Whisper large-v3：
+
+| 測試集 | Whisper large-v3 | Qwen3-ASR 1.7B |
+| --- | --- | --- |
+| WenetSpeech 網路／會議 | 9.86／19.11 | 4.97／5.88 |
+| AISHELL-2 | 5.06 | 2.71 |
+| SpeechIO | 7.56 | 2.88 |
+| Fleurs 中文 | 4.09 | 2.41 |
+| CommonVoice 中文 | 12.91 | 5.35 |
+| 口語對話（官方內部） | 14.01 | 6.54 |
+
+第三方在 M5 MacBook Air 以 FLEURS 測試，中文 CER 為 Qwen3-ASR 1.7B 6.49%、Whisper Large V3 Turbo 7.97%，作者認為差距落在誤差範圍內；Qwen 的優勢主要在口語、會議與快速說話等較雜亂的錄音。[Whisper Notes 比較](https://whispernotes.app/blog/qwen3-asr-vs-whisper)
+
+限制：支援的方言清單沒有台灣國語，官方也未說明會輸出繁體字，App 仍沿用既有的簡轉繁處理
+
+### Hyday Talk 的實作
+
+- 以 transcribe.cpp 執行 Qwen3-ASR，固定於 commit `f1dcd15858c4bbba87ca97862b4e448b2cf15b8f`，靜態連結後與 whisper-cli 一起內嵌於 App
+- 模型取自 [handy-computer 的 Qwen3-ASR 0.6B GGUF](https://huggingface.co/handy-computer/Qwen3-ASR-0.6B-gguf) 與 [1.7B GGUF](https://huggingface.co/handy-computer/Qwen3-ASR-1.7B-gguf)，提供 0.6B Q8_0（約 850 MB）與 1.7B Q6_K（約 1.69 GB），下載後驗證 SHA-256
+- 個人詞典與 Hyday 詞彙以 `--vocabulary` 傳給模型
+- 本機以 macOS 台灣中文合成語音試跑 0.6B，載入後每段 5 至 8 秒的錄音約 0.2 至 0.3 秒完成，第一次載入約 5 秒；合成語音過於標準，無法反映真人快速說話時的差異，實際準確度仍需使用者以日常聽寫比較

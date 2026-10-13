@@ -12,10 +12,15 @@ public enum SpeechTranscription {
         case .system: throw TalkError("系統辨識需從即時音訊串流取得結果。")
         case .whisper:
             let prefix = file.deletingLastPathComponent().appendingPathComponent("transcript").path
+            let terms = hints ?? settings.activeDictionary.map(\.replacement)
             do {
-                _ = try await ProcessRunner.run(executable: settings.whisperExecutable,
-                    arguments: whisperArguments(settings: settings, file: file, prefix: prefix,
-                                                hints: hints ?? settings.activeDictionary.map(\.replacement)), timeout: 180)
+                if LocalSpeechModel.engine(forModelPath: settings.whisperModel) == .qwen {
+                    _ = try await ProcessRunner.run(executable: qwenExecutable(settings: settings),
+                        arguments: qwenArguments(settings: settings, file: file, output: prefix + ".txt", hints: terms), timeout: 180)
+                } else {
+                    _ = try await ProcessRunner.run(executable: settings.whisperExecutable,
+                        arguments: whisperArguments(settings: settings, file: file, prefix: prefix, hints: terms), timeout: 180)
+                }
             } catch is CancellationError { throw CancellationError() }
             catch { throw TalkError("本機語音辨識未完成，請確認模型已下載後重試。") }
             let url = URL(fileURLWithPath: prefix + ".txt")
@@ -35,6 +40,21 @@ public enum SpeechTranscription {
                 language: settings.languageCode, dictionary: hints ?? settings.dictionary.map(\.replacement), session: session)
         }
         return try validatedText(output)
+    }
+
+    /// The Qwen3-ASR engine ships next to whisper-cli inside the app.
+    public static func qwenExecutable(settings: TalkSettings) -> String {
+        URL(fileURLWithPath: settings.whisperExecutable).deletingLastPathComponent().appendingPathComponent("transcribe-cli").path
+    }
+
+    public static func qwenArguments(settings: TalkSettings, file: URL, output: String, hints: [String]) -> [String] {
+        var arguments = ["-q", "-m", (settings.whisperModel as NSString).expandingTildeInPath, "-l", settings.languageCode,
+                         "--timestamps", "none", "-o", output]
+        // The vocabulary is comma separated, so commas inside a term would split it.
+        let terms = hints.map { $0.replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }.prefix(60)
+        if !terms.isEmpty { arguments += ["--vocabulary", terms.joined(separator: ",")] }
+        return arguments + [file.path]
     }
 
     /// Whisper biases toward words in its initial prompt, so dictionary and Hyday terms are

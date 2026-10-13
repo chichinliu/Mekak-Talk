@@ -82,9 +82,17 @@ final class LocalSpeechModelTests: XCTestCase {
         }
     }
 
-    func testModelsDownloadFromTheWhisperCppRepository() {
-        XCTAssertEqual(LocalSpeechModel.all.map(\.id), ["large-v3-turbo-q5_0", "small"])
+    func testModelsListWhisperAndQwenWithTheirOwnSources() {
+        XCTAssertEqual(LocalSpeechModel.all.map(\.id), ["large-v3-turbo-q5_0", "qwen3-asr-0.6b-q8_0", "qwen3-asr-1.7b-q6_k", "small"])
         XCTAssertEqual(LocalSpeechModel.recommended.downloadURL.absoluteString,
                        "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo-q5_0.bin")
+        XCTAssertEqual(LocalSpeechModel.recommended.engine, .whisper)
+        let qwen = LocalSpeechModel.qwenSmall
+        XCTAssertEqual(qwen.engine, .qwen)
+        XCTAssertEqual(qwen.downloadURL.absoluteString,
+                       "https://huggingface.co/handy-computer/Qwen3-ASR-0.6B-gguf/resolve/main/Qwen3-ASR-0.6B-Q8_0.gguf")
+        XCTAssertEqual(qwen.bytes, 850_423_456)
+        XCTAssertEqual(LocalSpeechModel.engine(forModelPath: "/m/Qwen3-ASR-0.6B-Q8_0.gguf"), .qwen)
+        XCTAssertEqual(LocalSpeechModel.engine(forModelPath: "/m/ggml-small.bin"), .whisper)
     }
 }

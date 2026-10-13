@@ -17,6 +17,7 @@ ensure_app_stopped
 source "$PROJECT_DIR/scripts/signing-identity.sh"
 select_signing_identity
 bash scripts/build-whisper-runtime.sh
+bash scripts/build-transcribe-runtime.sh
 swift build -c release
 BINARY_DIR="$(swift build -c release --show-bin-path)"
 PACKAGE_STAGE="$(mktemp -d "$PROJECT_DIR/.build/app-package.XXXXXX")"
@@ -32,10 +33,13 @@ mkdir -p "$STAGED_APP/Contents/MacOS" "$STAGED_APP/Contents/Resources" "$STAGED_
 cp "$BINARY_DIR/HydayTalk" "$STAGED_APP/Contents/MacOS/HydayTalk"
 cp .build/whisper-runtime/build/bin/whisper-cli "$STAGED_APP/Contents/Helpers/whisper-cli"
 cp .build/whisper-runtime/source/LICENSE "$STAGED_APP/Contents/Resources/Whisper-LICENSE.txt"
+cp .build/transcribe-runtime/transcribe-cli "$STAGED_APP/Contents/Helpers/transcribe-cli"
+cp .build/transcribe-runtime/source/LICENSE "$STAGED_APP/Contents/Resources/Transcribe-LICENSE.txt"
 cp Resources/Info.plist "$STAGED_APP/Contents/Info.plist"
 cat Sources/HydayTalk/DesignTokens.swift scripts/make-icon.swift > "$PACKAGE_STAGE/make-icon.swift"
 swift "$PACKAGE_STAGE/make-icon.swift" "$STAGED_APP/Contents/Resources/AppIcon.icns"
 codesign --force --sign "$SIGNING_IDENTITY" --options runtime "$STAGED_APP/Contents/Helpers/whisper-cli"
+codesign --force --sign "$SIGNING_IDENTITY" --options runtime "$STAGED_APP/Contents/Helpers/transcribe-cli"
 codesign --force --sign "$SIGNING_IDENTITY" --options runtime --entitlements Resources/HydayTalk.entitlements "$STAGED_APP"
 codesign --verify --strict "$STAGED_APP"
 ensure_app_stopped

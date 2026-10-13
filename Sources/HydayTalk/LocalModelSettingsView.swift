@@ -24,11 +24,11 @@ struct LocalModelSettingsView: View {
                         } else if let url {
                             Button("使用此模型") { select(url) }.buttonStyle(AlignButtonStyle())
                                 .accessibilityLabel("使用 \(candidate.title)")
-                                .disabled(manager.busyModelID != nil || !manager.engineReady)
+                                .disabled(manager.busyModelID != nil || !manager.engineReady(for: candidate.filename))
                         } else {
                             Button("下載並使用") { manager.download(candidate, onSelect: select) }.buttonStyle(AlignButtonStyle(kind: .primary))
                                 .accessibilityLabel("下載並使用 \(candidate.title)")
-                                .disabled(manager.busyModelID != nil || !manager.engineReady)
+                                .disabled(manager.busyModelID != nil || !manager.engineReady(for: candidate.filename))
                         }
                     }
                     if manager.busyModelID == candidate.id {

@@ -70,4 +70,16 @@ final class SpeechCLIConfigurationTests: XCTestCase {
         let many = SpeechTranscription.whisperArguments(settings: settings, file: file, prefix: "/tmp/t", hints: (0..<300).map { "詞\($0)" })
         XCTAssertLessThanOrEqual(many[many.firstIndex(of: "--prompt")! + 1].count, 220)
     }
+
+    func testQwenRunsThroughTheTranscribeEngineWithVocabulary() {
+        var settings = TalkSettings(); settings.locale = "zh-TW"
+        settings.whisperExecutable = "/App/Contents/Helpers/whisper-cli"
+        settings.whisperModel = "/m/Qwen3-ASR-0.6B-Q8_0.gguf"
+        XCTAssertEqual(SpeechTranscription.qwenExecutable(settings: settings), "/App/Contents/Helpers/transcribe-cli")
+        let file = URL(fileURLWithPath: "/tmp/a.wav")
+        XCTAssertEqual(SpeechTranscription.qwenArguments(settings: settings, file: file, output: "/tmp/t.txt", hints: ["Hyday", "Life, Log"]),
+                       ["-q", "-m", "/m/Qwen3-ASR-0.6B-Q8_0.gguf", "-l", "zh", "--timestamps", "none", "-o", "/tmp/t.txt",
+                        "--vocabulary", "Hyday,Life Log", "/tmp/a.wav"])
+        XCTAssertFalse(SpeechTranscription.qwenArguments(settings: settings, file: file, output: "/tmp/t.txt", hints: []).contains("--vocabulary"))
+    }
 }

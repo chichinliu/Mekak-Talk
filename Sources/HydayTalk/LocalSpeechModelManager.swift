@@ -15,6 +15,10 @@ final class LocalSpeechModelManager: ObservableObject {
 
     static var enginePath: String { Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/whisper-cli").path }
     var engineReady: Bool { CLIExecutableDiscovery.isExecutable(Self.enginePath) }
+    static var qwenEnginePath: String { Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/transcribe-cli").path }
+    func engineReady(for modelPath: String) -> Bool {
+        CLIExecutableDiscovery.isExecutable(LocalSpeechModel.engine(forModelPath: modelPath) == .qwen ? Self.qwenEnginePath : Self.enginePath)
+    }
 
     func prepare(currentPath: String, onSelect: @escaping (URL) -> Void) {
         guard !prepared else { return }; prepared = true

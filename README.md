@@ -65,14 +65,16 @@ open 'dist/Hyday Talk.app'
 | 來源 | 設定方式 | 資料處理 |
 | --- | --- | --- |
 | 系統辨識 | 允許語音辨識權限並選擇語言 | 由 Apple Speech 處理，部分語言可能使用 Apple 伺服器；可設定僅使用離線辨識 |
-| 本機模型 | 於 App 內下載模型 | 以內建的 whisper.cpp 在本機辨識，錄音不會上傳 |
+| 本機模型 | 於 App 內下載模型 | 以內建的 whisper.cpp 或 transcribe.cpp 在本機辨識，錄音不會上傳 |
 | API | 設定服務網址、模型名稱與 API Key | 音訊傳送至指定的 OpenAI 相容服務 |
 
 系統辨識單次錄音上限為 55 秒，其他來源為 180 秒
 
-本機模型提供 Whisper Large v3 Turbo（約 574 MB，建議使用）與 Whisper Small（約 488 MB），下載完成後會驗證檔案大小與 SHA-256，模型存放於 `~/Library/Application Support/HydayTalk/Models/`，不納入版本控制或 App 安裝包
+本機模型提供 Whisper Large v3 Turbo（約 574 MB，建議使用）、Qwen3-ASR 0.6B（約 850 MB）、Qwen3-ASR 1.7B（約 1.69 GB）與 Whisper Small（約 488 MB），Qwen3-ASR 對中文口語與中英夾雜較準確，下載完成後會驗證檔案大小與 SHA-256，模型存放於 `~/Library/Application Support/HydayTalk/Models/`，不納入版本控制或 App 安裝包
 
 whisper.cpp 固定於 v1.9.2（commit `306c88f4d1286aec1bf96e544632897886af5501`），由 `scripts/build-whisper-runtime.sh` 取得並建置，以靜態連結方式內嵌於 App，使用者不需另行安裝
+
+Qwen3-ASR 由 transcribe.cpp 執行，固定於 commit `f1dcd15858c4bbba87ca97862b4e448b2cf15b8f`，由 `scripts/build-transcribe-runtime.sh` 取得並建置，同樣以靜態連結內嵌於 App；模型檔取自 Hugging Face 的 handy-computer 轉檔，採 Apache 2.0 授權，個人詞典與 Hyday 詞彙會作為辨識詞彙提示
 
 API 來源需支援 `POST /audio/transcriptions` 並回傳含 `text` 欄位的 JSON，遠端服務僅接受 HTTPS；本機服務可使用 HTTP 並免填 API Key
 
@@ -171,3 +173,5 @@ swiftc -parse-as-library Sources/TalkCore/*.swift scripts/verify-backends.swift 
 - [Apple Speech](https://developer.apple.com/documentation/speech/sfspeechrecognizer)
 - [OpenAI 語音辨識](https://developers.openai.com/api/docs/guides/speech-to-text)
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
+- [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp)
+- [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR)
