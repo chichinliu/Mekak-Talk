@@ -8,8 +8,9 @@ public struct LocalSpeechModel: Identifiable, Equatable, Sendable {
     public let filename: String
     public let bytes: Int64
     public let sha256: String
+    public let repository: String
     public var downloadURL: URL {
-        URL(string: "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/\(filename)")!
+        URL(string: "https://huggingface.co/\(repository)/resolve/main/\(filename)")!
     }
     public var sizeLabel: String { ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file) }
 
@@ -19,11 +20,16 @@ public struct LocalSpeechModel: Identifiable, Equatable, Sendable {
     public static let small = LocalSpeechModel(id: "small", title: "Whisper Small",
         detail: "較小的多語模型，適合減少儲存空間。", filename: "ggml-small.bin", bytes: 487_601_967,
         sha256: "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b")
-    public static let all: [LocalSpeechModel] = [recommended, small]
+    public static let breeze = LocalSpeechModel(id: "breeze-asr-25-q5_k", title: "Breeze ASR 25",
+        detail: "針對台灣華語與中英夾雜調整，辨識速度較慢。", filename: "ggml-breeze-asr-25-q5_k.bin", bytes: 1_080_732_091,
+        sha256: "37d2574613cc92c38e54cca156fab132e83fa10ce79c32e6fbe393f4b52912d9",
+        repository: "shdennlin/breeze-asr-25-ggml")
+    public static let all: [LocalSpeechModel] = [recommended, small, breeze]
 
-    public init(id: String, title: String, detail: String, filename: String, bytes: Int64, sha256: String) {
+    public init(id: String, title: String, detail: String, filename: String, bytes: Int64, sha256: String,
+                repository: String = "ggerganov/whisper.cpp") {
         self.id = id; self.title = title; self.detail = detail; self.filename = filename
-        self.bytes = bytes; self.sha256 = sha256
+        self.bytes = bytes; self.sha256 = sha256; self.repository = repository
     }
 }
 

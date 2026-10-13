@@ -81,4 +81,13 @@ final class LocalSpeechModelTests: XCTestCase {
             XCTAssertEqual(settings.speechBackend, backend)
         }
     }
+
+    func testBreezeIsListedWithItsOwnDownloadSource() {
+        let breeze = LocalSpeechModel.breeze
+        XCTAssertTrue(LocalSpeechModel.all.contains(breeze))
+        XCTAssertEqual(breeze.downloadURL.absoluteString,
+                       "https://huggingface.co/shdennlin/breeze-asr-25-ggml/resolve/main/ggml-breeze-asr-25-q5_k.bin")
+        XCTAssertEqual(breeze.bytes, 1_080_732_091)
+        XCTAssertTrue(LocalSpeechModel.recommended.downloadURL.absoluteString.hasPrefix("https://huggingface.co/ggerganov/whisper.cpp/"))
+    }
 }
