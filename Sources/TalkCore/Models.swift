@@ -195,6 +195,8 @@ public struct TalkSettings: Codable, Equatable, Sendable {
     /// A folder chosen in the Hyday page; nil follows Hyday's own `vault.root`.
     public var hydayFolder: String?
     var askHydayNotes: Bool?
+    var readScreenContext: Bool?
+    var screenContextExcluded: [String]?
     /// Text questions answer from notes found in the Hyday folder; off by default.
     public var asksHydayNotes: Bool {
         get { askHydayNotes ?? false }

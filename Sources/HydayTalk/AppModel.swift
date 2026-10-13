@@ -66,6 +66,7 @@ final class AppModel: ObservableObject {
     private var correctionTask: Task<Void, Never>?
     private var sessionSettings = TalkSettings()
     private var sessionHints: [String] = []
+    private var sessionContext: ScreenContext?
     /// Entities and tags from the Hyday folder; only ever used as recognition hints.
     @Published private(set) var lastCorrectionCheck: CorrectionCheck?
     @Published private(set) var hydayVocabulary: [String] = []
@@ -253,8 +254,11 @@ final class AppModel: ObservableObject {
         let snapshot = settings
         do { try validate(snapshot, action: action) }
         catch { fail(error); return }
-        target = action == .hyday ? nil : TextInsertion.capture()
+        let focused = TextInsertion.capture()
+        target = action == .hyday ? nil : focused
         if target?.secure == true { fail(TalkError("這是密碼欄位。請改在一般文字輸入框使用。")); return }
+        // Read before the panel appears, while the cursor is still where the user will type.
+        sessionContext = focused.flatMap { snapshot.shouldReadScreenContext(for: action, app: $0.name) ? TextInsertion.screenContext(of: $0) : nil }
         sessionID = UUID(); let current = sessionID
         sessionSettings = snapshot; self.action = action
         sessionHints = RecognitionHints.terms(dictionary: snapshot.dictionary, vocabulary: hydayVocabulary)
@@ -305,7 +309,7 @@ final class AppModel: ObservableObject {
         let spokeAt = Date()
         elapsed = spokeAt.timeIntervalSince(started); audio.stop(); level = 0
         let duration = elapsed; let current = sessionID; let snapshot = sessionSettings
-        let voiceAction = action; let inputTarget = target; let hints = sessionHints
+        let voiceAction = action; let inputTarget = target; let hints = sessionHints; let context = sessionContext
         phase = .transcribing; onPanelChange?()
         if snapshot.interactionSounds { NSSound(named: "Pop")?.play() }
         operation = Task {
@@ -330,7 +334,11 @@ final class AppModel: ObservableObject {
                 if snapshot.requiresTextModel(for: voiceAction) && snapshot.textBackend != .basic {
                     phase = .processing
                     do {
-                        let processed = try await process(text: cleaned, selection: inputTarget?.selection ?? "", action: voiceAction, settings: snapshot)
+                        var processed = try await process(text: cleaned, selection: inputTarget?.selection ?? "", action: voiceAction, settings: snapshot, context: context)
+                        if let context, context.leaked(into: processed, transcript: cleaned) {
+                            // The AI copied screen text; redo the cleanup without it.
+                            processed = try await process(text: cleaned, selection: inputTarget?.selection ?? "", action: voiceAction, settings: snapshot)
+                        }
                         output = voiceAction == .dictate ? try TextProcessing.checkedDictationOutput(processed, source: cleaned) : processed
                         if voiceAction == .dictate, (snapshot.dictationLayout ?? .automatic) == .automatic, ParagraphLayout.needsLayout(output),
                            let laidOut = try? await complete(prompt: ParagraphLayout.prompt(output), settings: snapshot) {
@@ -451,13 +459,14 @@ final class AppModel: ObservableObject {
         }
     }
 
-    private func process(text: String, selection: String, action: VoiceAction, settings: TalkSettings) async throws -> String {
+    private func process(text: String, selection: String, action: VoiceAction, settings: TalkSettings,
+                         context: ScreenContext? = nil) async throws -> String {
         var notes: [HydayNote]?
         if action == .ask, settings.asksHydayNotes, settings.textBackend != .basic, let root = hydayRoot {
             notes = await HydaySearchService.notes(root: root, query: String([text, selection].filter { !$0.isEmpty }.joined(separator: " ").prefix(200)))
             try Task.checkCancellation()
         }
-        let prompt = try TextProcessing.prompt(action: action, transcript: text, selection: selection, settings: settings, notes: notes)
+        let prompt = try TextProcessing.prompt(action: action, transcript: text, selection: selection, settings: settings, notes: notes, context: context)
         return settings.textBackend == .basic ? text : try await complete(prompt: prompt, settings: settings)
     }
 

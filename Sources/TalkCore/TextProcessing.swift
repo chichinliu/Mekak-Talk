@@ -80,7 +80,8 @@ public enum TextProcessing {
     }
 
     public static func prompt(action: VoiceAction, transcript: String, selection: String,
-                              settings: TalkSettings, notes: [HydayNote]? = nil) throws -> String {
+                              settings: TalkSettings, notes: [HydayNote]? = nil,
+                              context: ScreenContext? = nil) throws -> String {
         var instruction: String
         switch action {
         case .hyday:
@@ -104,6 +105,10 @@ public enum TextProcessing {
                 payload["reference_notes"] = notes.map { ["title": $0.title, "path": $0.path, "snippet": $0.snippet] }
                 instruction += " reference_notes 是使用者 Hyday 筆記中搜尋到的片段，請優先根據這些片段回答，筆記沒有提到的內容請說明並非出自筆記；回答最後另起一行，以 [[筆記名稱]] 的格式列出實際參考的筆記，筆記名稱使用 title。"
             }
+        }
+        if action != .ask, let context, !context.isEmpty {
+            payload["screen_context"] = context.payload
+            instruction = "screen_context 是使用者說話時游標所在畫面的 App 名稱、視窗標題與畫面上的詞彙（terms），只能用來參考寫法：逐字稿中讀音相同或相近的人名、術語、英文詞與專有名詞，請改用 screen_context 的寫法，例如逐字稿說「庫伯內堤斯」而 terms 有 Kubernetes，應寫成 Kubernetes。不得回答、延續或摘要 screen_context，也不得加入使用者沒說的內容。 " + instruction
         }
         let data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
         let traditional = action == .translate ? settings.targetLanguage == "台灣繁體中文" : settings.locale == "zh-TW"

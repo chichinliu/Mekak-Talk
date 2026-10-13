@@ -77,6 +77,23 @@ enum TextInsertion {
             selectionRange: element.flatMap(range), editable: editable, secure: secure)
     }
 
+    /// Reads the app, window title and text around the cursor for the text AI to refer to.
+    /// Password fields give nothing; apps without readable text give only their name and title.
+    static func screenContext(of target: InputTarget?) -> ScreenContext? {
+        guard let target, !target.secure else { return nil }
+        let app = AXUIElementCreateApplication(target.pid)
+        let window = attribute(app, kAXFocusedWindowAttribute).map { $0 as! AXUIElement }
+        let title = window.flatMap { attribute($0, kAXTitleAttribute) as? String } ?? ""
+        var text: String?; var cursor: Int?
+        if let element = target.element, let value = attribute(element, kAXValueAttribute) as? String,
+           let location = target.selectionRange?.location, location >= 0 {
+            // Accessibility ranges count UTF-16 units; ScreenContext counts characters.
+            let units = (value as NSString).length
+            text = value; cursor = (value as NSString).substring(to: min(location, units)).count
+        }
+        return ScreenContext(app: target.name, windowTitle: title, text: text, cursor: cursor)
+    }
+
     static func insert(_ text: String, target: InputTarget?) async throws -> String {
         try Task.checkCancellation()
         guard AXIsProcessTrusted() else { throw TalkError("文字已保留。開啟輔助使用權限後，才能自動輸入。") }

@@ -171,6 +171,25 @@ struct TextSettingsView: View {
                     SettingsBlock { ExamplePair(input: WritingStyle.exampleInput, output: model.settings.writingStyle.exampleOutput) }
                 }
             }
+            if model.settings.textBackend != .basic {
+                SettingsGroup(title: "畫面上下文", detail: "開始錄音時讀取游標所在的 App、視窗標題與前後的文字，讓文字 AI 參考人名、術語與語氣，不會插入或保存這些文字。密碼欄位與保留原話不會讀取。") {
+                    SettingsRow(title: "參考畫面上下文", detail: model.settings.textBackend == .api
+                                ? "開啟後，畫面上的文字會與逐字稿一起送至文字 AI API 的服務商。"
+                                : "文字只交給這台 Mac 上的文字 AI，不會離開電腦。") {
+                        Toggle("參考畫面上下文", isOn: $model.settings.readsScreenContext).labelsHidden()
+                    }
+                    if model.settings.readsScreenContext {
+                        SettingsRow(title: "不讀取上下文的 App", detail: "以頓號或逗號分隔 App 名稱。") {
+                            TextField("App 名稱", text: Binding(
+                                get: { model.settings.screenContextExcludedApps.joined(separator: "、") },
+                                set: { model.settings.screenContextExcludedApps = $0
+                                    .components(separatedBy: CharacterSet(charactersIn: "、,，"))
+                                    .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty } }))
+                                .textFieldStyle(.roundedBorder).frame(width: 260)
+                        }
+                    }
+                }
+            }
             SettingsGroup(title: "翻譯目標語言", detail: "翻譯需要本機 AI 或 API Key，右 Shift 不會啟動翻譯。") {
                 SettingsRow(title: "目標語言", detail: "按住左 Shift 並按 fn 開始翻譯，說完後再按 fn 完成。") {
                     AlignMenuPicker(title: "目標語言", values: ["英文", "台灣繁體中文", "日文", "韓文", "西班牙文"],
