@@ -21,12 +21,9 @@ public struct LocalSpeechModel: Identifiable, Equatable, Sendable {
     }
     public var sizeLabel: String { ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file) }
 
-    public static let recommended = LocalSpeechModel(id: "large-v3-turbo-q5_0", title: "Whisper Large v3 Turbo",
-        detail: "建議使用，支援中文與多語辨識。", filename: "ggml-large-v3-turbo-q5_0.bin", bytes: 574_041_195,
+    public static let whisperTurbo = LocalSpeechModel(id: "large-v3-turbo-q5_0", title: "Whisper Large v3 Turbo",
+        detail: "支援中文與多語辨識。", filename: "ggml-large-v3-turbo-q5_0.bin", bytes: 574_041_195,
         sha256: "394221709cd5ad1f40c46e6031ca61bce88931e6e088c188294c6d5a55ffa7e2")
-    public static let small = LocalSpeechModel(id: "small", title: "Whisper Small",
-        detail: "較小的多語模型，適合減少儲存空間。", filename: "ggml-small.bin", bytes: 487_601_967,
-        sha256: "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b")
     public static let qwenSmall = LocalSpeechModel(id: "qwen3-asr-0.6b-q8_0", title: "Qwen3-ASR 0.6B",
         detail: "中文口語與中英夾雜辨識較準，速度快。", filename: "Qwen3-ASR-0.6B-Q8_0.gguf", bytes: 850_423_456,
         sha256: "f081b2d5e23bd669d92cc331d722a8a0681943b8e6f34b48996fd5c319b5acd8",
@@ -35,7 +32,9 @@ public struct LocalSpeechModel: Identifiable, Equatable, Sendable {
         detail: "辨識最準確，需要較多儲存空間與記憶體。", filename: "Qwen3-ASR-1.7B-Q6_K.gguf", bytes: 1_692_554_208,
         sha256: "c75a961b7134a6c952d89797865cb0d0376876185aee04ef6d12c31c2952e4e1",
         repository: "handy-computer/Qwen3-ASR-1.7B-gguf")
-    public static let all: [LocalSpeechModel] = [recommended, qwenSmall, qwenLarge, small]
+    /// Marked as recommended in the model list and selected first when installed.
+    public static let recommended = qwenSmall
+    public static let all: [LocalSpeechModel] = [whisperTurbo, qwenSmall, qwenLarge]
 
     public init(id: String, title: String, detail: String, filename: String, bytes: Int64, sha256: String,
                 repository: String = "ggerganov/whisper.cpp") {

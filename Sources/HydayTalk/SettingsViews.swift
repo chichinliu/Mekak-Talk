@@ -43,11 +43,19 @@ private struct DividedLayout: _VariadicView_MultiViewRoot {
 struct SettingsRow<Control: View>: View {
     let title: String
     var detail: String? = nil
+    var badge: String? = nil
     @ViewBuilder let control: Control
     var body: some View {
         HStack(alignment: .center, spacing: 24) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(Typography.font(.body))
+                HStack(spacing: 8) {
+                    Text(title).font(Typography.font(.body))
+                    if let badge {
+                        Text(badge).font(Typography.font(.caption, weight: .medium)).foregroundStyle(Palette.accentInk)
+                            .padding(.horizontal, 8).padding(.vertical, 2)
+                            .background(Palette.accentSurface, in: Capsule())
+                    }
+                }
                 if let detail {
                     Text(detail).font(Typography.font(.caption)).foregroundStyle(Palette.muted)
                         .lineSpacing(Typography.paragraphSpacing).fixedSize(horizontal: false, vertical: true)

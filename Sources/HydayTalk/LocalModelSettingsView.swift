@@ -17,7 +17,8 @@ struct LocalModelSettingsView: View {
                 let url = manager.installed[candidate.id]
                 let selected = url?.path == model.settings.whisperModel
                 VStack(alignment: .leading, spacing: 0) {
-                    SettingsRow(title: candidate.title, detail: "\(candidate.detail) \(candidate.sizeLabel)") {
+                    SettingsRow(title: candidate.title, detail: "\(candidate.detail) \(candidate.sizeLabel)",
+                                badge: candidate == .recommended ? "推薦" : nil) {
                         if selected {
                             Label("使用中", systemImage: "checkmark.circle.fill")
                                 .font(Typography.font(.caption, weight: .medium)).foregroundStyle(Palette.action).fixedSize()

@@ -70,7 +70,7 @@ open 'dist/Hyday Talk.app'
 
 系統辨識單次錄音上限為 55 秒，其他來源為 180 秒
 
-本機模型提供 Whisper Large v3 Turbo（約 574 MB，建議使用）、Qwen3-ASR 0.6B（約 850 MB）、Qwen3-ASR 1.7B（約 1.69 GB）與 Whisper Small（約 488 MB），Qwen3-ASR 對中文口語與中英夾雜較準確，下載完成後會驗證檔案大小與 SHA-256，模型存放於 `~/Library/Application Support/HydayTalk/Models/`，不納入版本控制或 App 安裝包
+本機模型提供 Qwen3-ASR 0.6B（約 850 MB，推薦使用）、Qwen3-ASR 1.7B（約 1.69 GB）與 Whisper Large v3 Turbo（約 574 MB），Qwen3-ASR 對中文口語與中英夾雜較準確，下載完成後會驗證檔案大小與 SHA-256，模型存放於 `~/Library/Application Support/HydayTalk/Models/`，不納入版本控制或 App 安裝包
 
 whisper.cpp 固定於 v1.9.2（commit `306c88f4d1286aec1bf96e544632897886af5501`），由 `scripts/build-whisper-runtime.sh` 取得並建置，以靜態連結方式內嵌於 App，使用者不需另行安裝
 
