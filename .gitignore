@@ -7,3 +7,4 @@ models/*.bin
 .local-signing-identity
 .impeccable/
 models/
+.claude/worktrees/
