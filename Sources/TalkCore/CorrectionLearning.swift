@@ -133,3 +133,26 @@ public enum CorrectionJudge {
         answer.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters)) == "是"
     }
 }
+
+/// The outcome of the latest read-back, shown on the dictionary page so it is clear where learning stopped.
+public struct CorrectionCheck: Equatable, Sendable {
+    public enum Outcome: Equatable, Sendable {
+        case unsupportedField, noEdit, unreadable, noCorrection, notTerms(Int), judgeFailed, learned(Int)
+    }
+    public let app: String
+    public let date: Date
+    public let outcome: Outcome
+    public init(app: String, date: Date = Date(), outcome: Outcome) { self.app = app; self.date = date; self.outcome = outcome }
+
+    public var message: String {
+        switch outcome {
+        case .unsupportedField: return "\(app) 的輸入框不提供游標位置，無法比對"
+        case .noEdit: return "沒有偵測到你在 \(app) 修改文字"
+        case .unreadable: return "讀不到 \(app) 的輸入框文字"
+        case .noCorrection: return "沒有發現可學習的修正"
+        case .notTerms(let count): return "\(count) 處修正判斷為一般錯字，未加入"
+        case .judgeFailed: return "文字 AI 未完成判斷，未加入"
+        case .learned(let count): return "已加入 \(count) 個詞彙，待確認"
+        }
+    }
+}

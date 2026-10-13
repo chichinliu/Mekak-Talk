@@ -201,6 +201,16 @@ struct DictionaryView: View {
                 }
             }
             SettingsGroup(title: "個人辭典", detail: "標示為自動加入的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。新學到的詞彙標示為待確認，按下確認後才會套用。") {
+                if model.settings.learnsFromCorrections {
+                    SettingsRow(title: "最近一次比對結果",
+                                detail: model.lastCorrectionCheck.map { "\($0.app) · \($0.date.formatted(date: .omitted, time: .shortened))" }
+                                    ?? "聽寫插入文字後，修改再離開輸入框，這裡會顯示比對結果。") {
+                        Text(model.lastCorrectionCheck?.message ?? "尚未比對")
+                            .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+                            .multilineTextAlignment(.trailing).frame(maxWidth: 260, alignment: .trailing)
+                    }
+                    Divider()
+                }
                 if model.settings.dictionary.isEmpty {
                     SettingsBlock {
                         Label("尚無詞彙，請新增經常辨識錯誤的人名或術語。", systemImage: "character.book.closed")

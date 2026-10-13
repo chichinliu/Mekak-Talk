@@ -67,6 +67,7 @@ final class AppModel: ObservableObject {
     private var sessionSettings = TalkSettings()
     private var sessionHints: [String] = []
     /// Entities and tags from the Hyday folder; only ever used as recognition hints.
+    @Published private(set) var lastCorrectionCheck: CorrectionCheck?
     @Published private(set) var hydayVocabulary: [String] = []
     @Published private(set) var scanningHydayVocabulary = false
     private var vocabularyTask: Task<Void, Never>?
@@ -463,6 +464,7 @@ final class AppModel: ObservableObject {
     // MARK: Learning from corrections
 
     private struct PendingCorrection {
+        let app: String
         let element: AXUIElement
         let pid: pid_t
         let location: Int
@@ -475,9 +477,11 @@ final class AppModel: ObservableObject {
     private func watchCorrections(of inserted: String, at target: InputTarget?, settings: TalkSettings) {
         stopWatchingCorrections()
         // Judging needs the text AI; without it nothing is learned.
-        guard settings.learnsFromCorrections, settings.textBackend != .basic,
-              let target, let element = target.element, let location = target.selectionRange?.location else { return }
-        pendingCorrection = PendingCorrection(element: element, pid: target.pid, location: location, inserted: inserted,
+        guard settings.learnsFromCorrections, settings.textBackend != .basic, let target else { return }
+        guard let element = target.element, let location = target.selectionRange?.location else {
+            lastCorrectionCheck = CorrectionCheck(app: target.name, outcome: .unsupportedField); return
+        }
+        pendingCorrection = PendingCorrection(app: target.name, element: element, pid: target.pid, location: location, inserted: inserted,
                                               expires: Date().addingTimeInterval(120))
         let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.checkCorrectionsIfLeft() }
@@ -491,7 +495,9 @@ final class AppModel: ObservableObject {
 
     private func checkCorrectionsIfLeft() {
         guard let pending = pendingCorrection else { stopWatchingCorrections(); return }
-        if Date() > pending.expires { stopWatchingCorrections(); return }
+        if Date() > pending.expires {
+            lastCorrectionCheck = CorrectionCheck(app: pending.app, outcome: .noEdit); stopWatchingCorrections(); return
+        }
         guard TextInsertion.isEditing(pending.element, pid: pending.pid) else { checkCorrections(); return }
         if let caret = TextInsertion.caretLocation(pending.element), caret != pending.location + pending.inserted.utf16.count {
             pendingCorrection?.userEdited = true
@@ -507,23 +513,31 @@ final class AppModel: ObservableObject {
            let caret = TextInsertion.caretLocation(pending.element), caret != pending.location + pending.inserted.utf16.count {
             pending.userEdited = true
         }
-        guard Date() <= pending.expires, pending.userEdited,
-              let following = TextInsertion.readBack(pending.element, from: pending.location, length: pending.inserted.utf16.count + 200)
-        else { return }
+        guard Date() <= pending.expires, pending.userEdited else {
+            lastCorrectionCheck = CorrectionCheck(app: pending.app, outcome: .noEdit); return
+        }
+        guard let following = TextInsertion.readBack(pending.element, from: pending.location, length: pending.inserted.utf16.count + 200) else {
+            lastCorrectionCheck = CorrectionCheck(app: pending.app, outcome: .unreadable); return
+        }
         let corrections = CorrectionFinder.find(inserted: pending.inserted, following: following)
-        guard !corrections.isEmpty else { return }
+        guard !corrections.isEmpty else { lastCorrectionCheck = CorrectionCheck(app: pending.app, outcome: .noCorrection); return }
+        let app = pending.app
         let snapshot = settings
         // Learning follows the order of the user's edits, not the order the AI answers in.
         let previous = correctionTask
         correctionTask = Task { [weak self] in
             await previous?.value
+            var learned = 0, typos = 0, failed = 0
             for correction in corrections {
                 guard let prompt = try? CorrectionJudge.prompt(for: correction),
-                      let answer = try? await self?.complete(prompt: prompt, settings: snapshot),
-                      CorrectionJudge.isTerm(answer) else { continue }
+                      let answer = try? await self?.complete(prompt: prompt, settings: snapshot) else { failed += 1; continue }
+                guard CorrectionJudge.isTerm(answer) else { typos += 1; continue }
                 guard !Task.isCancelled, let self, self.settings.learnsFromCorrections else { return }
-                DictionaryLearning.learn(correction, into: &self.settings)
+                DictionaryLearning.learn(correction, into: &self.settings); learned += 1
             }
+            guard !Task.isCancelled, let self else { return }
+            self.lastCorrectionCheck = CorrectionCheck(app: app, outcome: learned > 0 ? .learned(learned)
+                : (typos > 0 ? .notTerms(typos) : .judgeFailed))
         }
     }
 

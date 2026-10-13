@@ -154,3 +154,16 @@ final class CorrectionJudgeTests: XCTestCase {
         XCTAssertFalse(CorrectionJudge.isTerm("我不確定"))
     }
 }
+
+final class CorrectionCheckTests: XCTestCase {
+    func testEachOutcomeExplainsWhatHappenedInTheApp() {
+        let at = Date(timeIntervalSince1970: 0)
+        XCTAssertEqual(CorrectionCheck(app: "TempoTerm", date: at, outcome: .unreadable).message, "讀不到 TempoTerm 的輸入框文字")
+        XCTAssertEqual(CorrectionCheck(app: "LINE", date: at, outcome: .noEdit).message, "沒有偵測到你在 LINE 修改文字")
+        XCTAssertEqual(CorrectionCheck(app: "Notes", date: at, outcome: .noCorrection).message, "沒有發現可學習的修正")
+        XCTAssertEqual(CorrectionCheck(app: "Notes", date: at, outcome: .notTerms(2)).message, "2 處修正判斷為一般錯字，未加入")
+        XCTAssertEqual(CorrectionCheck(app: "Notes", date: at, outcome: .learned(1)).message, "已加入 1 個詞彙，待確認")
+        XCTAssertEqual(CorrectionCheck(app: "Notes", date: at, outcome: .judgeFailed).message, "文字 AI 未完成判斷，未加入")
+        XCTAssertEqual(CorrectionCheck(app: "Notes", date: at, outcome: .unsupportedField).message, "Notes 的輸入框不提供游標位置，無法比對")
+    }
+}
