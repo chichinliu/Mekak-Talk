@@ -79,7 +79,7 @@ private struct Note: View {
     init(_ text: String) { self.text = text }
     var body: some View {
         Text(text).font(Typography.font(.caption)).foregroundStyle(Palette.muted).lineSpacing(Typography.paragraphSpacing)
-            .fixedSize(horizontal: false, vertical: true).frame(maxWidth: 560, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
