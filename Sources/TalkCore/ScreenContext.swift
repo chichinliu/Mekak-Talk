@@ -39,11 +39,12 @@ public struct ScreenContext: Equatable, Sendable {
         String(text.unicodeScalars.filter { CharacterSet.letters.union(.decimalDigits).contains($0) }.map(Character.init))
     }
 
+    /// The window title is free text from another app, so it is reduced to terms like the rest.
     /// Capitalised English words, acronyms and product names near the cursor. Small models copy
     /// whole screen text into their output, so only these spellings are handed to the AI.
     public var terms: [String] {
         let regex = try! NSRegularExpression(pattern: "[A-Za-z][A-Za-z0-9+#]*(?:[.-][A-Za-z0-9+#]+)*")
-        let text = before + " " + after
+        let text = windowTitle + " " + before + " " + after
         var seen = Set<String>(); var result: [String] = []
         for match in regex.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
             guard let range = Range(match.range, in: text) else { continue }
@@ -56,7 +57,7 @@ public struct ScreenContext: Equatable, Sendable {
     }
 
     var payload: [String: Any] {
-        ["app": app, "window_title": windowTitle, "terms": terms]
+        ["app": app, "terms": terms]
     }
 }
 
