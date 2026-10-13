@@ -256,7 +256,8 @@ struct ExamplePair: View {
     let input: String
     let output: String
     var body: some View {
-        HStack(alignment: .top, spacing: 24) {
+        // Stacked so each example uses the full width instead of wrapping in half a column.
+        VStack(alignment: .leading, spacing: 14) {
             example("說話內容", text: input, emphasized: false)
             example("整理結果", text: output, emphasized: true)
         }
