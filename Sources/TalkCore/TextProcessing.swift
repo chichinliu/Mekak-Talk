@@ -80,8 +80,8 @@ public enum TextProcessing {
     }
 
     public static func prompt(action: VoiceAction, transcript: String, selection: String,
-                              settings: TalkSettings) throws -> String {
-        let instruction: String
+                              settings: TalkSettings, notes: [HydayNote]? = nil) throws -> String {
+        var instruction: String
         switch action {
         case .hyday:
             instruction = HydayEntryFormatting.instruction
@@ -97,6 +97,14 @@ public enum TextProcessing {
         var payload: [String: Any] = ["transcript": transcript, "selected_text": selection,
                                       "dictionary": settings.activeDictionary.map { ["heard": $0.heard, "write": $0.replacement] }]
         if action == .dictate { payload["preserve_literals"] = literals(transcript).sorted() }
+        if action == .ask, let notes {
+            if notes.isEmpty {
+                instruction += " 使用者開啟了問筆記，但 Hyday 筆記中沒有找到相關筆記；請照常回答，並在回答開頭說明沒有找到相關筆記。"
+            } else {
+                payload["reference_notes"] = notes.map { ["title": $0.title, "path": $0.path, "snippet": $0.snippet] }
+                instruction += " reference_notes 是使用者 Hyday 筆記中搜尋到的片段，請優先根據這些片段回答，筆記沒有提到的內容請說明並非出自筆記；回答最後另起一行，以 [[筆記名稱]] 的格式列出實際參考的筆記，筆記名稱使用 title。"
+            }
+        }
         let data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
         let traditional = action == .translate ? settings.targetLanguage == "台灣繁體中文" : settings.locale == "zh-TW"
         let outputLanguage = traditional ? "中文請使用台灣繁體中文與全形標點，保留英文、數字、網址與程式碼原有的符號。" : ""

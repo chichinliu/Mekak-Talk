@@ -42,7 +42,7 @@ final class AudioCapture {
         }
     }
 
-    func start(settings: TalkSettings) throws {
+    func start(settings: TalkSettings, hints: [String]) throws {
         cancel(); engine = AVAudioEngine(); sessionID = UUID()
         let current = sessionID; text = ""; finalReceived = false; recognitionError = nil
         if settings.speechBackend == .system {
@@ -56,7 +56,7 @@ final class AudioCapture {
             bufferRequest.shouldReportPartialResults = true
             bufferRequest.requiresOnDeviceRecognition = settings.systemOfflineOnly
             bufferRequest.addsPunctuation = true
-            bufferRequest.contextualStrings = Array(settings.activeDictionary.map(\.replacement).prefix(100))
+            bufferRequest.contextualStrings = hints
             request = bufferRequest
             recognition = recognizer.recognitionTask(with: bufferRequest) { [weak self] result, error in
                 Task { @MainActor in
