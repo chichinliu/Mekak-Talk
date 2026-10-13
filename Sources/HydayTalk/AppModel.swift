@@ -331,6 +331,10 @@ final class AppModel: ObservableObject {
                     do {
                         let processed = try await process(text: cleaned, selection: inputTarget?.selection ?? "", action: voiceAction, settings: snapshot)
                         output = voiceAction == .dictate ? try TextProcessing.checkedDictationOutput(processed, source: cleaned) : processed
+                        if voiceAction == .dictate, (snapshot.dictationLayout ?? .automatic) == .automatic, ParagraphLayout.needsLayout(output),
+                           let laidOut = try? await complete(prompt: ParagraphLayout.prompt(output), settings: snapshot) {
+                            output = ParagraphLayout.accept(laidOut, original: output)
+                        }
                         aiFormatted = true
                     }
                     catch is CancellationError { throw CancellationError() }
