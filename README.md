@@ -22,49 +22,6 @@ Hyday Talk 是一款原生 macOS 語音輸入工具，使用者在任何 App 中
 | 建置工具 | Xcode Command Line Tools、Swift 5.9 以上、CMake |
 | 本機文字 AI（選用） | Ollama 與已下載的文字模型 |
 
-## 建置與執行
-
-### 建置 App
-
-```bash
-bash scripts/build-app.sh
-open 'dist/Hyday Talk.app'
-```
-
-建置前請關閉權限指引並完全結束 Hyday Talk，建置腳本會拒絕覆寫執行中的 App
-
-首次建置會由 `scripts/build-whisper-runtime.sh` 與 `scripts/build-transcribe-runtime.sh` 取得固定版本的 whisper.cpp 與 transcribe.cpp 原始碼並以靜態連結建置，需要 CMake；系統未安裝 CMake 時，腳本會改用 `.build/whisper-runtime/tooling` 中的 CMake。兩個辨識引擎會放入 App 的 `Contents/Helpers`，之後的建置沿用 `.build` 中的結果
-
-建置腳本會依序選擇可用的 Developer ID Application 或 Apple Development 憑證，並將簽署身分保存於不納入版本控制的 `.local-signing-identity`，後續建置沿用同一身分以維持系統權限授權，亦可透過 `CODE_SIGN_IDENTITY` 環境變數指定憑證；本機臨時測試可指定 `CODE_SIGN_IDENTITY=-` 使用 ad hoc 簽章，但此方式無法跨版本保留權限授權
-
-App 與內嵌的辨識引擎皆以強化執行環境簽署並附上時間戳記，符合 Apple 公證的要求
-
-### 發佈新版本
-
-發佈需要 Developer ID Application 憑證，以及存放於鑰匙圈的公證設定。公證設定只需建立一次，使用 App Store Connect API Key：
-
-```bash
-xcrun notarytool store-credentials hyday-notary \
-  --key ~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8 \
-  --key-id <KEY_ID> --issuer <ISSUER_ID>
-```
-
-API Key 與 Issuer ID 可於 App Store Connect 的使用者與存取權限，整合，App Store Connect API 頁面取得
-
-每次發佈的步驟如下：
-
-1. 更新 `Resources/Info.plist` 的 `CFBundleShortVersionString` 與 `CFBundleVersion`
-2. 執行 `bash scripts/make-dmg.sh`，腳本會建置 App、製作 DMG、簽署、送交公證、等待結果並裝訂公證票證，最後以系統驗證 DMG，產出 `dist/Hyday-Talk-<版本>.dmg`
-3. 以 GitHub CLI 建立版本並上傳 DMG
-
-```bash
-gh release create v<版本> dist/Hyday-Talk-<版本>.dmg --title "Hyday Talk <版本>" --notes-file <版本說明檔>
-```
-
-已建置過 App 時，可設定 `SKIP_BUILD=1` 略過建置；公證設定名稱不同時，可透過 `NOTARY_PROFILE` 環境變數指定
-
-目前的版本僅支援 Apple Silicon
-
 ## 初次設定
 
 首次開啟時，App 會顯示權限指引，請依序允許下列權限：
