@@ -87,6 +87,9 @@ struct VoiceBarActions {
 struct VoiceBarView: View {
     let state: VoiceBarState
     @Binding var expanded: Bool
+    @State private var history: [Double] = []
+    private let sampler = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
+    private static let historyLength = 26
     var actions = VoiceBarActions()
     private var terminal: Bool { state.phase == .done || state.phase == .failed }
     private var radius: CGFloat { expanded ? 16 : 26 }
@@ -97,10 +100,14 @@ struct VoiceBarView: View {
             controls.frame(height: 32)
             if expanded { details }
         }.padding(LayoutToken.voicePanelPadding).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(Palette.canvas, in: RoundedRectangle(cornerRadius: radius))
+            .background(Palette.voiceSurface, in: RoundedRectangle(cornerRadius: radius))
             .overlay(RoundedRectangle(cornerRadius: radius).stroke(Palette.border, lineWidth: 1))
             .padding(2).font(Typography.font(.caption)).lineSpacing(Typography.paragraphSpacing)
             .foregroundStyle(Palette.ink).tint(Palette.action).preferredColorScheme(.light).focusEffectDisabled()
+            .onReceive(sampler) { _ in
+                guard state.phase == .recording else { if !history.isEmpty { history = [] }; return }
+                history = Array((history + [min(1, max(0, state.level))]).suffix(Self.historyLength))
+            }
     }
 
     private var controls: some View {
@@ -114,16 +121,15 @@ struct VoiceBarView: View {
                     .frame(width: 24, height: 24)
                     .accessibilityHidden(true)
             }
-            VStack(alignment: .leading, spacing: 0) {
+            if state.phase == .recording {
+                levelMeter.accessibilityHint(compactTitle)
+                Text(elapsedText).font(Typography.font(.body, weight: .medium)).monospacedDigit()
+                    .fixedSize().padding(.horizontal, 4).accessibilityLabel("錄音時間").accessibilityValue(elapsedText)
+            } else {
                 Text(compactTitle).font(Typography.font(.caption, weight: .semibold)).lineLimit(1)
-                    .help(state.notice.isEmpty ? compactTitle : state.notice)
-                if state.phase == .recording {
-                    Text(elapsedText).font(Typography.font(.caption)).monospacedDigit().foregroundStyle(Palette.muted)
-                        .fixedSize().accessibilityLabel("錄音時間").accessibilityValue(elapsedText)
-                }
-            }.fixedSize(horizontal: true, vertical: false)
-            if state.phase == .recording { levelMeter }
-            Spacer(minLength: 0)
+                    .help(state.notice.isEmpty ? compactTitle : state.notice).fixedSize()
+                Spacer(minLength: 0)
+            }
             if state.phase == .recording {
                 control("stop.fill", label: "完成錄音 · fn", emphasized: true, action: actions.finish)
             } else if terminal && !state.result.isEmpty {
@@ -160,17 +166,19 @@ struct VoiceBarView: View {
         }
     }
 
+    /// Scrolling level history: the newest sample enters on the right and
+    /// older samples fade as they drift left, so the meter fills its width.
     private var levelMeter: some View {
-        let level = min(1, max(0, state.level))
-        return HStack(spacing: 2) {
-            ForEach(0..<19, id: \.self) { index in
-                let envelope = max(0.2, 1 - abs(Double(index) - 9) / 9)
-                Capsule().fill(Palette.accent)
-                    .frame(width: 2, height: 3 + CGFloat(level * envelope) * CGFloat([12, 20, 15, 25, 18][index % 5]))
+        let samples = Array(repeating: 0.0, count: max(0, Self.historyLength - history.count)) + history
+        return HStack(spacing: 2.5) {
+            ForEach(samples.indices, id: \.self) { index in
+                let age = Double(index) / Double(Self.historyLength - 1)
+                Capsule().fill(Palette.accent.opacity(0.3 + 0.7 * age))
+                    .frame(width: 2.5, height: 3 + CGFloat(samples[index]) * 19)
             }
-        }.frame(width: LayoutToken.voiceLevelWidth, height: 20)
+        }.frame(maxWidth: .infinity, maxHeight: 22)
             .accessibilityElement(children: .ignore).accessibilityLabel("麥克風音量")
-            .accessibilityValue("\(Int(level * 100)) 百分比")
+            .accessibilityValue("\(Int(min(1, max(0, state.level)) * 100)) 百分比")
     }
 
     private var details: some View {

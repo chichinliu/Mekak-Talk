@@ -2,6 +2,7 @@ import SwiftUI
 
 enum DesignTokens {
     enum Colors {
+        static let voiceSurface = Color(.sRGB, red: 244 / 255, green: 245 / 255, blue: 247 / 255) // #F4F5F7
         static let canvas = Color(.sRGB, red: 254 / 255, green: 254 / 255, blue: 254 / 255) // #FEFEFE
         static let workspace = Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255) // #F2F2F2
         static let sidebar = Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255) // #F2F2F2
@@ -92,13 +93,12 @@ enum DesignTokens {
     enum Layout {
         static let guideWidth: CGFloat = 860
         static let guideHeight: CGFloat = 680
-        static let voicePanelWidth: CGFloat = 300
+        static let voicePanelWidth: CGFloat = 256
         static let voicePanelHeight: CGFloat = 52
         static let voiceDetailHeight: CGFloat = 200
         static let voicePanelPadding: CGFloat = 8
         static let voicePanelBottomInset: CGFloat = 24
         static let voiceControlSize: CGFloat = 28
-        static let voiceLevelWidth: CGFloat = 74
     }
 }
 
