@@ -88,7 +88,8 @@ struct VoiceBarView: View {
     let state: VoiceBarState
     @Binding var expanded: Bool
     @State private var history: [Double] = []
-    private let sampler = Timer.publish(every: 0.08, on: .main, in: .common).autoconnect()
+    @State private var sampleCount = 0
+    private let sampler = Timer.publish(every: 0.06, on: .main, in: .common).autoconnect()
     private static let historyLength = 26
     var actions = VoiceBarActions()
     private var terminal: Bool { state.phase == .done || state.phase == .failed }
@@ -106,7 +107,9 @@ struct VoiceBarView: View {
             .foregroundStyle(Palette.ink).tint(Palette.action).preferredColorScheme(.light).focusEffectDisabled()
             .onReceive(sampler) { _ in
                 guard state.phase == .recording else { if !history.isEmpty { history = [] }; return }
-                history = Array((history + [min(1, max(0, state.level))]).suffix(Self.historyLength))
+                sampleCount += 1
+                let sample = VoiceMeter.display(level: state.level) * VoiceMeter.jitter(sample: sampleCount)
+                history = Array((history + [sample]).suffix(Self.historyLength))
             }
     }
 
@@ -169,14 +172,17 @@ struct VoiceBarView: View {
     /// Scrolling level history: the newest sample enters on the right and
     /// older samples fade as they drift left, so the meter fills its width.
     private var levelMeter: some View {
-        let samples = Array(repeating: 0.0, count: max(0, Self.historyLength - history.count)) + history
+        var samples = Array(repeating: 0.0, count: max(0, Self.historyLength - history.count)) + history
+        // The newest bar follows the live level so the meter reacts the moment you speak.
+        samples[samples.count - 1] = max(samples[samples.count - 1], VoiceMeter.display(level: state.level))
         return HStack(spacing: 2.5) {
             ForEach(samples.indices, id: \.self) { index in
                 let age = Double(index) / Double(Self.historyLength - 1)
-                Capsule().fill(Palette.accent.opacity(0.3 + 0.7 * age))
-                    .frame(width: 2.5, height: 3 + CGFloat(samples[index]) * 19)
+                Capsule().fill(Palette.accent.opacity(0.45 + 0.55 * age))
+                    .frame(width: 2.5, height: 3 + CGFloat(min(1.1, samples[index])) * 19)
             }
-        }.frame(maxWidth: .infinity, maxHeight: 22)
+        }.animation(.easeOut(duration: 0.08), value: samples)
+            .frame(maxWidth: .infinity, maxHeight: 24)
             .accessibilityElement(children: .ignore).accessibilityLabel("麥克風音量")
             .accessibilityValue("\(Int(min(1, max(0, state.level)) * 100)) 百分比")
     }
