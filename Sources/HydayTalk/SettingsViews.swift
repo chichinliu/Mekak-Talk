@@ -183,24 +183,38 @@ struct TextSettingsView: View {
 
 struct DictionaryView: View {
     @ObservedObject var model: AppModel
-    @State private var heard = ""
-    @State private var replacement = ""
+    @State private var term = ""
+    @State private var misheard = ""
+    @State private var filter: Bool? = nil
+    @State private var search = ""
+    @State private var hovered: UUID?
+    private var entries: [DictionaryEntry] {
+        RecognitionHints.ordered(model.settings.dictionary).filter { entry in
+            (filter == nil || entry.isAutomatic == filter)
+                && (search.isEmpty || entry.term.localizedCaseInsensitiveContains(search) || (entry.misheard ?? "").localizedCaseInsensitiveContains(search))
+        }
+    }
+    private func add() {
+        let word = term.trimmingCharacters(in: .whitespacesAndNewlines)
+        let wrong = misheard.trimmingCharacters(in: .whitespacesAndNewlines)
+        // A manual entry replaces any term with the same spelling apart from case.
+        model.settings.dictionary.removeAll { $0.term.lowercased() == word.lowercased() }
+        model.settings.dictionary.append(DictionaryEntry(term: word, misheard: wrong.isEmpty ? nil : wrong))
+        term = ""; misheard = ""
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
-            SettingsGroup(title: "新增詞彙", detail: "繁體中文模式請使用繁體字，辭典會套用至辨識結果並提供給系統辨識與文字 AI 作為提示。") {
+            SettingsGroup(title: "新增詞彙", detail: "詞彙會提供給語音辨識與文字 AI 作為提示；填寫常聽錯成時，辨識結果中的這段文字會換成詞彙。") {
                 SettingsBlock {
                     HStack(alignment: .bottom, spacing: 12) {
-                        LabeledField("辨識文字", placeholder: "例如：海帶", text: $heard)
-                        Image(systemName: "arrow.right").foregroundStyle(Palette.muted).padding(.bottom, 11)
-                        LabeledField("替換文字", placeholder: "例如：Hyday", text: $replacement)
-                        Button("加入") {
-                            model.settings.dictionary.append(DictionaryEntry(heard: heard.trimmingCharacters(in: .whitespacesAndNewlines), replacement: replacement.trimmingCharacters(in: .whitespacesAndNewlines)))
-                            heard = ""; replacement = ""
-                        }.buttonStyle(AlignButtonStyle(kind: .primary)).disabled(heard.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || replacement.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        LabeledField("詞彙", placeholder: "例如：Hyday", text: $term)
+                        LabeledField("常聽錯成（選填）", placeholder: "例如：hide day", text: $misheard)
+                        Button("加入", action: add).buttonStyle(AlignButtonStyle(kind: .primary))
+                            .disabled(term.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                 }
             }
-            SettingsGroup(title: "個人辭典", detail: "標示為自動加入的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。新學到的詞彙標示為待確認，按下確認後才會套用。") {
+            SettingsGroup(title: "個人辭典", detail: "自動新增的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。") {
                 if model.settings.learnsFromCorrections {
                     SettingsRow(title: "最近一次比對結果",
                                 detail: model.lastCorrectionCheck.map { "\($0.app) · \($0.date.formatted(date: .omitted, time: .shortened))" }
@@ -211,45 +225,48 @@ struct DictionaryView: View {
                     }
                     Divider()
                 }
-                if model.settings.dictionary.isEmpty {
-                    SettingsBlock {
-                        Label("尚無詞彙，請新增經常辨識錯誤的人名或術語。", systemImage: "character.book.closed")
-                            .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+                SettingsBlock {
+                    HStack(spacing: 12) {
+                        AlignSegmentedPicker(title: "詞彙來源", values: [nil, true, false] as [Bool?], selection: $filter) {
+                            switch $0 { case nil: return "所有"; case true?: return "自動新增"; case false?: return "手動新增" }
+                        }.fixedSize()
+                        TextField("搜尋詞彙", text: $search, prompt: Text("搜尋詞彙").foregroundStyle(Palette.muted))
+                            .textFieldStyle(AlignTextFieldStyle()).accessibilityLabel("搜尋詞彙")
                     }
-                } else {
-                    HStack(spacing: 14) {
-                        Text("辨識文字").frame(maxWidth: .infinity, alignment: .leading)
-                        Color.clear.frame(width: 14)
-                        Text("替換文字").frame(maxWidth: .infinity, alignment: .leading)
-                        Color.clear.frame(width: 28)
-                    }.font(Typography.font(.caption)).foregroundStyle(Palette.muted).padding(.vertical, 10)
-                    ForEach(model.settings.dictionary) { entry in
-                        HStack(spacing: 14) {
-                            Text(entry.heard).foregroundStyle(Palette.muted).frame(maxWidth: .infinity, alignment: .leading)
-                            Image(systemName: "arrow.right").font(IconToken.font(.small)).foregroundStyle(Palette.faint).frame(width: 14)
-                            HStack(spacing: 8) {
-                                Text(entry.replacement)
-                                if entry.isPending {
-                                    Text("待確認").font(Typography.font(.caption, weight: .medium)).foregroundStyle(Palette.warningInk)
-                                        .padding(.horizontal, 8).padding(.vertical, 2)
-                                        .background(Palette.warningSurface, in: Capsule())
-                                } else if entry.isAutomatic {
-                                    Text("自動加入").font(Typography.font(.caption, weight: .medium)).foregroundStyle(Palette.actionInk)
-                                        .padding(.horizontal, 8).padding(.vertical, 2)
-                                        .background(Palette.surface, in: Capsule()).shadow(color: Color.black.opacity(0.06), radius: 1.5, y: 1)
-                                }
-                            }.frame(maxWidth: .infinity, alignment: .leading)
-                            if entry.isPending {
-                                Button("確認") { DictionaryLearning.confirm(entry, in: &model.settings) }
-                                    .buttonStyle(AlignButtonStyle(kind: .primary)).accessibilityLabel("確認詞彙 \(entry.heard)")
-                            }
-                            Button { DictionaryLearning.remove(entry, from: &model.settings) } label: { Image(systemName: "trash").frame(width: 20, height: 20) }
-                                .buttonStyle(AlignButtonStyle(kind: .ghost)).help("刪除詞彙 \(entry.heard)").accessibilityLabel("刪除詞彙 \(entry.heard)")
-                        }.font(Typography.font(.body)).padding(.vertical, 8)
+                    if entries.isEmpty {
+                        Label(model.settings.dictionary.isEmpty ? "尚無詞彙，可新增經常說到的人名、產品或術語。" : "沒有符合的詞彙。",
+                              systemImage: "character.book.closed")
+                            .font(Typography.font(.caption)).foregroundStyle(Palette.muted).padding(.vertical, 6)
+                    } else {
+                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                            ForEach(entries) { entry in chip(entry) }
+                        }
                     }
                 }
             }
         }.disabled(model.phase.busy)
+    }
+
+    private func chip(_ entry: DictionaryEntry) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: entry.isAutomatic ? "sparkle" : "pencil")
+                .font(IconToken.font(.small)).foregroundStyle(entry.isAutomatic ? Palette.accent : Palette.faint)
+                .help(entry.isAutomatic ? "自動新增" : "手動新增")
+            VStack(alignment: .leading, spacing: 1) {
+                Text(entry.term).font(Typography.font(.body)).lineLimit(1)
+                if let wrong = entry.misheard {
+                    Text("常聽錯成 \(wrong)").font(Typography.font(.caption)).foregroundStyle(Palette.muted).lineLimit(1)
+                }
+            }
+            Spacer(minLength: 0)
+            Button { DictionaryLearning.remove(entry, from: &model.settings) } label: { Image(systemName: "xmark").frame(width: 14, height: 14) }
+                .buttonStyle(AlignButtonStyle(kind: .ghost)).help("刪除詞彙 \(entry.term)").accessibilityLabel("刪除詞彙 \(entry.term)")
+                .opacity(hovered == entry.id ? 1 : 0)
+        }
+        .padding(.leading, 12).padding(.trailing, 4).frame(minHeight: 38)
+        .background(Palette.surface, in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Palette.border, lineWidth: 1))
+        .onHover { inside in hovered = inside ? entry.id : (hovered == entry.id ? nil : hovered) }
     }
 }
 

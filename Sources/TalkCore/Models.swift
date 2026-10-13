@@ -136,16 +136,25 @@ public enum WritingStyle: String, Codable, CaseIterable, Identifiable, Sendable 
 
 public struct DictionaryEntry: Codable, Identifiable, Equatable, Sendable {
     public var id = UUID()
+    /// Stored under the original keys so older settings still decode: `replacement` is the term,
+    /// `heard` the optional misheard spelling (empty when there is none).
     public var heard: String
     public var replacement: String
     /// Absent in settings saved before automatic learning existed.
     var automatic: Bool?
-    /// Learned entries wait for the user's confirmation before they change any text.
-    var pending: Bool?
     public var isAutomatic: Bool { automatic == true }
-    public var isPending: Bool { pending == true }
+    /// The correct spelling, given to recognition and the text AI as a hint.
+    public var term: String {
+        get { replacement }
+        set { replacement = newValue }
+    }
+    /// Only manual entries may name a misheard spelling, which is then replaced by the term.
+    public var misheard: String? { heard.isEmpty ? nil : heard }
+    public init(term: String, misheard: String? = nil, isAutomatic: Bool = false) {
+        heard = misheard ?? ""; replacement = term; automatic = isAutomatic ? true : nil
+    }
     public init(heard: String, replacement: String, isAutomatic: Bool = false) {
-        self.heard = heard; self.replacement = replacement; automatic = isAutomatic ? true : nil
+        self.init(term: replacement, misheard: heard, isAutomatic: isAutomatic)
     }
 }
 
@@ -200,8 +209,6 @@ public struct TalkSettings: Codable, Equatable, Sendable {
         set { learnFromCorrections = newValue }
     }
     public init() {}
-    /// Entries that take effect: everything except learned entries still awaiting confirmation.
-    public var activeDictionary: [DictionaryEntry] { dictionary.filter { !$0.isPending } }
     public var languageCode: String { String(locale.prefix(2)) }
     public func requiresTextModel(for action: VoiceAction) -> Bool {
         // Without a text AI, Hyday entries are stored as one cleaned list item.

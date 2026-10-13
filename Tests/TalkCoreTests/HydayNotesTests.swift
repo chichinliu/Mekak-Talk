@@ -71,12 +71,12 @@ final class HydayNotesTests: XCTestCase {
         XCTAssertEqual(try HydayVocabulary.scan(root: root), ["王小明", "旅行", "閱讀"])
     }
 
-    func testRecognitionHintsPutConfirmedDictionaryFirstAndCap() {
-        var pending = DictionaryEntry(heard: "a", replacement: "待確認")
-        pending.pending = true
-        let dictionary = [DictionaryEntry(heard: "海dei", replacement: "Hyday"), pending]
-        XCTAssertEqual(RecognitionHints.terms(dictionary: dictionary, vocabulary: ["Hyday", "王小明", "旅行"], limit: 2),
-                       ["Hyday", "王小明"])
+    func testRecognitionHintsPutManualThenNewestLearnedThenHydayAndCap() {
+        let dictionary = [DictionaryEntry(term: "舊學到", isAutomatic: true), DictionaryEntry(term: "Hyday"),
+                          DictionaryEntry(term: "新學到", isAutomatic: true)]
+        XCTAssertEqual(RecognitionHints.terms(dictionary: dictionary, vocabulary: ["Hyday", "王小明"], limit: 10),
+                       ["Hyday", "新學到", "舊學到", "王小明"])
+        XCTAssertEqual(RecognitionHints.terms(dictionary: dictionary, vocabulary: ["王小明"], limit: 2), ["Hyday", "新學到"])
     }
 
     func testAskPromptCarriesReferenceNotesAndLinkInstructions() throws {
@@ -97,10 +97,4 @@ final class HydayNotesTests: XCTestCase {
         XCTAssertFalse(old.asksHydayNotes)
     }
 
-    func testRecognitionHintsNeverDropConfirmedDictionaryWords() {
-        let dictionary = (0..<120).map { DictionaryEntry(heard: "h\($0)", replacement: "詞\($0)") }
-        let hints = RecognitionHints.terms(dictionary: dictionary, vocabulary: ["Hyday"], limit: 100)
-        XCTAssertEqual(hints.count, 120)
-        XCTAssertFalse(hints.contains("Hyday"))
-    }
 }

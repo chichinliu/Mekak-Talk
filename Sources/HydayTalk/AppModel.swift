@@ -476,8 +476,7 @@ final class AppModel: ObservableObject {
 
     private func watchCorrections(of inserted: String, at target: InputTarget?, settings: TalkSettings) {
         stopWatchingCorrections()
-        // Judging needs the text AI; without it nothing is learned.
-        guard settings.learnsFromCorrections, settings.textBackend != .basic, let target else { return }
+        guard settings.learnsFromCorrections, let target else { return }
         guard let element = target.element, let location = target.selectionRange?.location else {
             lastCorrectionCheck = CorrectionCheck(app: target.name, outcome: .unsupportedField); return
         }
@@ -529,6 +528,12 @@ final class AppModel: ObservableObject {
             await previous?.value
             var learned = 0, typos = 0, failed = 0
             for correction in corrections {
+                // Without a text AI only English words, numbers and acronyms are safe to learn.
+                if snapshot.textBackend == .basic {
+                    guard CorrectionJudge.learnableWithoutAI(correction.corrected) else { typos += 1; continue }
+                    guard !Task.isCancelled, let self, self.settings.learnsFromCorrections else { return }
+                    DictionaryLearning.learn(correction, into: &self.settings); learned += 1; continue
+                }
                 guard let prompt = try? CorrectionJudge.prompt(for: correction),
                       let answer = try? await self?.complete(prompt: prompt, settings: snapshot) else { failed += 1; continue }
                 guard CorrectionJudge.isTerm(answer) else { typos += 1; continue }

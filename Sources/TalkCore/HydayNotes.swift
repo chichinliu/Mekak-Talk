@@ -154,14 +154,17 @@ public enum HydayVocabulary {
 }
 
 public enum RecognitionHints {
-    /// Confirmed dictionary words first, then Hyday vocabulary, without duplicates.
+    /// Manual terms first, then learned terms newest first, then Hyday vocabulary, up to the limit.
+    /// Manual entries first, then learned ones newest first.
+    public static func ordered(_ dictionary: [DictionaryEntry]) -> [DictionaryEntry] {
+        dictionary.filter { !$0.isAutomatic } + dictionary.filter(\.isAutomatic).reversed()
+    }
+
     public static func terms(dictionary: [DictionaryEntry], vocabulary: [String], limit: Int = 100) -> [String] {
         var result: [String] = []
-        // Confirmed dictionary words are always hinted; Hyday vocabulary fills the rest up to the limit.
-        for term in dictionary.filter({ !$0.isPending }).map(\.replacement) where !term.isEmpty && !result.contains(term) {
-            result.append(term)
-        }
-        for term in vocabulary where result.count < limit && !term.isEmpty && !result.contains(term) {
+        let manual = dictionary.filter { !$0.isAutomatic }.map(\.term)
+        let learned = dictionary.filter(\.isAutomatic).reversed().map(\.term)
+        for term in manual + learned + vocabulary where result.count < limit && !term.isEmpty && !result.contains(term) {
             result.append(term)
         }
         return result
