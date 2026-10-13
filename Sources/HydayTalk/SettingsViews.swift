@@ -204,7 +204,7 @@ struct DictionaryView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
-            SettingsGroup(title: "新增詞彙", detail: "詞彙會提供給語音辨識與文字 AI 作為提示；填寫常聽錯成時，辨識結果中的這段文字會換成詞彙。") {
+            SettingsGroup(title: "新增詞彙", detail: "加入的詞彙會讓語音辨識和文字 AI 更容易寫對。如果知道它常被聽錯成什麼，也可以一起填上，辨識到時會自動換成正確的寫法。") {
                 SettingsBlock {
                     HStack(alignment: .bottom, spacing: 12) {
                         LabeledField("詞彙", placeholder: "例如：Hyday", text: $term)
