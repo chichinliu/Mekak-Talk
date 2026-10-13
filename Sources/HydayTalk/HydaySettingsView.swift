@@ -27,7 +27,7 @@ struct HydaySettingsView: View {
                     }
                 }
             }
-            SettingsGroup(title: "記到 Hyday", detail: "說完後整理成一個列點，加在今天日誌的最後面；一般聽寫不會寫入 Hyday。") {
+            SettingsGroup(title: "記到 Hyday", detail: "說完後依 Life Log 規則整理，第一行標上記錄時間，加在今天日誌的最後面；一般聽寫不會寫入 Hyday。") {
                 SettingsRow(title: "快捷鍵", detail: root == nil ? "設定 Hyday 資料夾後才能使用。" : nil) {
                     HStack(spacing: 6) { Keycap("fn"); Text("+").foregroundStyle(Palette.muted); Keycap("Space") }
                 }
