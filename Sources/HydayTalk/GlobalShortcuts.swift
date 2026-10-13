@@ -8,6 +8,7 @@ final class GlobalShortcuts {
     private var source: CFRunLoopSource?
     private var state = FnShortcutState()
     private var swallowedSpace = false
+    private var swallowedControl = false
     private var swallowedEscape = false
     var isBusy: () -> Bool = { false }
     var onAction: ((ShortcutAction) -> Void)?
@@ -31,12 +32,12 @@ final class GlobalShortcuts {
         if let tap { CGEvent.tapEnable(tap: tap, enable: false); CFMachPortInvalidate(tap) }
         if let source { CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes) }
         tap = nil; source = nil; state.reset()
-        swallowedSpace = false; swallowedEscape = false; onAvailability?(false)
+        swallowedSpace = false; swallowedEscape = false; swallowedControl = false; onAvailability?(false)
     }
 
     fileprivate func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
-            state.reset(); swallowedSpace = false; swallowedEscape = false
+            state.reset(); swallowedSpace = false; swallowedEscape = false; swallowedControl = false
             if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
             return Unmanaged.passUnretained(event)
         }
@@ -56,10 +57,12 @@ final class GlobalShortcuts {
                                          leftShift: leftShift, otherModifier: otherModifier, control: control)
                 consume = true
             } else if code == 59 || code == 62 {
-                // fn + Control starts a text question.
+                // fn + Control starts a text question; swallow the matching release too,
+                // so other apps never see a Control key-up without its key-down.
                 action = otherModifier ? nil : state.controlChanged(down: control)
                 if otherModifier { state.otherModifierChanged() }
-                consume = action != nil
+                if action != nil { swallowedControl = true; consume = true }
+                else if !control, swallowedControl { swallowedControl = false; consume = true }
             } else if code == 56, !otherModifier {
                 action = state.shiftChanged(down: leftShift)
                 consume = action != nil

@@ -64,4 +64,35 @@ final class HydayVaultTests: XCTestCase {
     func testFlattensSpeechIntoOneBullet() {
         XCTAssertEqual(HydayVault.bullet("  記得\n回信  "), "- 記得 回信")
     }
+
+    func testAnUnreadableJournalIsNeverReplaced() throws {
+        try write("---\nlastModified: x\n---\n- 重要的內容\n", to: journal)
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: journal.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: journal.path) }
+        XCTAssertThrowsError(try HydayVault(root: root).appendToJournal("- 新的", at: date(10), calendar: calendar))
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: journal.path)
+        XCTAssertEqual(try read(journal), "---\nlastModified: x\n---\n- 重要的內容\n")
+    }
+
+    func testRefusesHydayManagedFoldersAsTheRoot() {
+        for managed in [".hyday", "hyday-wiki"] {
+            let folder = root.appendingPathComponent(managed)
+            XCTAssertThrowsError(try HydayVault(root: folder).appendToJournal("- 新的", at: date(10), calendar: calendar))
+            XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appendingPathComponent("journal").path))
+        }
+    }
+
+    func testListMarkerComesFromTheBodyNotTheFrontmatter() throws {
+        try write("---\naliases:\n- 日誌\n---\n* 早上\n", to: journal)
+        try HydayVault(root: root).appendToJournal("- 下午", at: date(10), calendar: calendar)
+        XCTAssertTrue(try read(journal).hasSuffix("* 早上\n\n* 下午\n"))
+    }
+
+    func testKeepsFinderTagsAndExtendedAttributes() throws {
+        try write("---\nlastModified: x\n---\n- 原本\n", to: journal)
+        let value = Data("keep".utf8)
+        XCTAssertEqual(value.withUnsafeBytes { setxattr(journal.path, "tw.hyday.test", $0.baseAddress, value.count, 0, 0) }, 0)
+        try HydayVault(root: root).appendToJournal("- 新的", at: date(10), calendar: calendar)
+        XCTAssertGreaterThan(getxattr(journal.path, "tw.hyday.test", nil, 0, 0, 0), 0)
+    }
 }

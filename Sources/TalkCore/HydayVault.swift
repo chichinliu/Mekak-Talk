@@ -49,16 +49,20 @@ public struct HydayVault: Sendable {
     public func appendToJournal(_ markdown: String, at date: Date = Date(), calendar: Calendar = .current) throws -> URL {
         let url = journalURL(for: date, calendar: calendar)
         let folder = url.deletingLastPathComponent()
-        guard url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/") else { throw TalkError("Hyday 資料夾路徑無效。") }
+        guard url.standardizedFileURL.path.hasPrefix(root.standardizedFileURL.path + "/"),
+              !root.standardizedFileURL.pathComponents.contains(where: { $0 == ".hyday" || $0 == "hyday-wiki" })
+        else { throw TalkError("Hyday 資料夾路徑無效，請選擇 Hyday 筆記所在的資料夾。") }
         do { try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true) }
         catch { throw TalkError("無法建立 Hyday 日誌資料夾，請確認資料夾權限。") }
         let lock = open(folder.path, O_RDONLY)
         guard lock >= 0 else { throw TalkError("無法開啟 Hyday 日誌資料夾，請確認資料夾權限。") }
         defer { flock(lock, LOCK_UN); close(lock) }
-        flock(lock, LOCK_EX)
+        // Coordinates Hyday Talk's own writes; some network volumes cannot lock, and
+        // Hyday itself never takes this lock, so the compare below is the real guard.
+        _ = flock(lock, LOCK_EX)
         let stamp = Self.timestamp(date, calendar: calendar)
         for _ in 0..<5 {
-            let original = try? Data(contentsOf: url)
+            let original = try Self.contents(of: url)
             let base = original.flatMap { String(data: $0, encoding: .utf8) } ?? newJournal(stamp: stamp)
             let updated = Self.appending(markdown, to: base, stamp: stamp)
             let staging = folder.appendingPathComponent(".hyday-talk-\(UUID().uuidString).tmp")
@@ -67,11 +71,25 @@ public struct HydayVault: Sendable {
             catch { throw TalkError("無法寫入 Hyday 日誌，請確認磁碟空間與資料夾權限。") }
             beforeReplace?(url)
             // Only swap in the staged file if nobody changed the journal meanwhile.
-            guard (try? Data(contentsOf: url)) == original else { continue }
-            guard rename(staging.path, url.path) == 0 else { throw TalkError("無法寫入 Hyday 日誌，請確認資料夾權限。") }
+            guard try Self.contents(of: url) == original else { continue }
+            if original == nil {
+                guard rename(staging.path, url.path) == 0 else { throw TalkError("無法寫入 Hyday 日誌，請確認資料夾權限。") }
+            } else {
+                // replaceItemAt keeps the journal's Finder tags and extended attributes.
+                do { _ = try FileManager.default.replaceItemAt(url, withItemAt: staging) }
+                catch { throw TalkError("無法寫入 Hyday 日誌，請確認資料夾權限。") }
+            }
             return url
         }
         throw TalkError("Hyday 日誌持續被修改，請稍後再試。")
+    }
+
+    /// nil only when the journal does not exist; an unreadable journal (offline
+    /// iCloud placeholder, permissions) must never be treated as empty and replaced.
+    static func contents(of url: URL) throws -> Data? {
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        do { return try Data(contentsOf: url, options: .uncached) }
+        catch { throw TalkError("無法讀取今天的 Hyday 日誌，請確認檔案已下載且可以開啟。") }
     }
 
     private func newJournal(stamp: String) -> String {
@@ -85,7 +103,9 @@ public struct HydayVault: Sendable {
     static func appending(_ markdown: String, to text: String, stamp: String) -> String {
         var body = setting(field: "lastModified", to: stamp, in: text)
         // Follow the journal's own list marker so the new lines match.
-        let marker = body.split(separator: "\n").first { $0.hasPrefix("* ") || $0.hasPrefix("- ") }?.prefix(1) ?? "-"
+        let lines = body.split(separator: "\n", omittingEmptySubsequences: false)
+        let bodyStart = lines.first == "---" ? (lines.dropFirst().firstIndex(of: "---").map { $0 + 1 } ?? 0) : 0
+        let marker = lines[bodyStart...].first { $0.hasPrefix("* ") || $0.hasPrefix("- ") }?.prefix(1) ?? "-"
         let entry = markdown.split(separator: "\n", omittingEmptySubsequences: false).map { line in
             marker == "*" && line.hasPrefix("- ") && !line.hasPrefix("- [") ? "* " + line.dropFirst(2) : Substring(line)
         }.joined(separator: "\n").trimmingCharacters(in: .newlines)
