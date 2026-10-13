@@ -348,7 +348,8 @@ final class AppModel: ObservableObject {
                 if voiceAction == .hyday {
                     // Kept as the result first, so a failed write still leaves the text to copy.
                     let formatted = aiFormatted ? HydayEntryFormatting.entry(output, time: HydayEntryFormatting.time(spokeAt)) : ""
-                    let entry = formatted.isEmpty ? HydayVault.bullet(output) : formatted; result = entry
+                    let entry = HydayEntryFormatting.stamped(formatted.isEmpty ? HydayVault.bullet(output) : formatted,
+                                                             time: HydayEntryFormatting.time(spokeAt)); result = entry
                     guard let root = hydayRoot else { throw TalkError("找不到 Hyday 資料夾，請到 Hyday 頁重新設定。") }
                     try await Task.detached(priority: .userInitiated) {
                         try HydayVault(root: root).appendToJournal(entry)

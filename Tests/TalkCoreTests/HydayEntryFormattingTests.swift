@@ -63,4 +63,14 @@ final class HydayEntryFormattingTests: XCTestCase {
     func testABrokenMarkKeepsTheWordsInsideItsOwnParentheses() {
         XCTAssertEqual(HydayEntryFormatting.entry("%(外層 (補充) 說明", time: "09:05"), "- 外層 (補充) 說明")
     }
+
+    func testStampsTheFirstLineWithTheRecordingTime() {
+        XCTAssertEqual(HydayEntryFormatting.stamped("- [ ] 回信\n- %(今天很順)", time: "14:32"), "- [ ] -(14:32) 回信\n- %(今天很順)")
+        XCTAssertEqual(HydayEntryFormatting.stamped("- 記得回信", time: "14:32"), "- -(14:32) 記得回信")
+        XCTAssertEqual(HydayEntryFormatting.stamped("* 散步", time: "08:05"), "* -(08:05) 散步")
+        XCTAssertEqual(HydayEntryFormatting.stamped("### 今日回顧\n- 開會", time: "21:00"), "### -(21:00) 今日回顧\n- 開會")
+        // A line that already carries a time is left alone.
+        XCTAssertEqual(HydayEntryFormatting.stamped("- >(14:32) 開始寫報告", time: "14:32"), "- >(14:32) 開始寫報告")
+        XCTAssertEqual(HydayEntryFormatting.stamped("\n- 記得回信", time: "14:32"), "\n- -(14:32) 記得回信")
+    }
 }

@@ -47,6 +47,20 @@ public enum HydayEntryFormatting {
     private static let heading = try! NSRegularExpression(pattern: "^(#{1,6})\\s+(.+)$")
     private static let clock = try! NSRegularExpression(pattern: "^\\d{1,2}:\\d{2}$")
 
+    /// Every Hyday entry records when it was spoken: the first line gets a `-(HH:mm)` mark
+    /// after its list or heading prefix, unless it already starts with a timed mark.
+    public static func stamped(_ entry: String, time: String) -> String {
+        var lines = entry.components(separatedBy: "\n")
+        guard let index = lines.firstIndex(where: { !$0.trimmingCharacters(in: .whitespaces).isEmpty }) else { return entry }
+        let line = lines[index]
+        let prefix = try! NSRegularExpression(pattern: "^\\s*(?:#{1,6} |[-*+] \\[[ xX]\\] |[-*+] )?")
+        let end = Range(prefix.firstMatch(in: line, range: NSRange(line.startIndex..., in: line))!.range, in: line)!.upperBound
+        let rest = line[end...]
+        if rest.range(of: "^[<>\\-][(（]\\d{2}:\\d{2}[)）]", options: .regularExpression) != nil { return entry }
+        lines[index] = line[..<end] + "-(\(time)) " + rest
+        return lines.joined(separator: "\n")
+    }
+
     /// Validates AI output line by line; malformed marks become plain bullets with their text kept.
     public static func entry(_ output: String, time: String) -> String {
         var lines: [String] = []
