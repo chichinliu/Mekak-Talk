@@ -209,8 +209,21 @@ final class AppModel: ObservableObject {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_" + pane) { NSWorkspace.shared.open(url) }
     }
 
+    /// The folder chosen on the Hyday page, otherwise Hyday's own configured folder.
+    var hydayRoot: URL? {
+        if let folder = settings.hydayFolder {
+            let url = URL(fileURLWithPath: folder)
+            return HydayVault.isDirectory(url) ? url : nil
+        }
+        return HydayVault.configuredRoot()
+    }
+
     func begin(action: VoiceAction = .dictate) {
         guard !phase.busy else { return }
+        if action == .hyday, hydayRoot == nil {
+            self.action = action; result = ""
+            fail(TalkError("請先在 Hyday 頁設定 Hyday 資料夾。")); return
+        }
         refreshPermissions()
         if !microphoneAllowed || (settings.speechBackend == .system && !speechAllowed) {
             openPermissionGuide(at: !microphoneAllowed ? .microphone : .speech)
@@ -222,13 +235,14 @@ final class AppModel: ObservableObject {
         let snapshot = settings
         do { try validate(snapshot, action: action) }
         catch { fail(error); return }
-        target = TextInsertion.capture()
+        target = action == .hyday ? nil : TextInsertion.capture()
         if target?.secure == true { fail(TalkError("這是密碼欄位。請改在一般文字輸入框使用。")); return }
         sessionID = UUID(); let current = sessionID
         sessionSettings = snapshot; self.action = action
         result = ""; transcript = ""; notice = ""; elapsed = 0; level = 0
-        destination = snapshot.autoInsert && action != .ask && (target?.editable != true || target?.element == nil)
-            ? "剪貼簿" : (target?.name ?? "結果區")
+        destination = action == .hyday ? "Hyday"
+            : (snapshot.autoInsert && action != .ask && (target?.editable != true || target?.element == nil)
+               ? "剪貼簿" : (target?.name ?? "結果區"))
         phase = .preparing; onPanelChange?()
         operation = Task {
             do {
@@ -308,7 +322,15 @@ final class AppModel: ObservableObject {
                 output = TextProcessing.formatOutput(output, action: voiceAction, settings: snapshot)
                 result = output
                 var delivered = false
-                if snapshot.autoInsert && voiceAction != .ask {
+                if voiceAction == .hyday {
+                    // Kept as the result first, so a failed write still leaves the text to copy.
+                    let entry = HydayVault.bullet(output); result = entry
+                    guard let root = hydayRoot else { throw TalkError("找不到 Hyday 資料夾，請到 Hyday 頁重新設定。") }
+                    try await Task.detached(priority: .userInitiated) {
+                        try HydayVault(root: root).appendToJournal(entry)
+                    }.value
+                    notice = "已記到 Hyday 今天的日誌。"
+                } else if snapshot.autoInsert && voiceAction != .ask {
                     let message: String
                     do {
                         message = try await TextInsertion.insert(output, target: inputTarget)
@@ -323,15 +345,21 @@ final class AppModel: ObservableObject {
                     notice = notice.isEmpty ? message : notice + " " + message
                 } else { notice = notice.isEmpty ? "文字已保留，可複製到需要的地方。" : notice }
                 try Task.checkCancellation(); guard sessionID == current else { return }
+                let place = voiceAction == .hyday ? "Hyday" : (inputTarget?.name ?? "結果區")
                 usage.record(words: TextProcessing.wordCount(output), seconds: duration,
-                             app: inputTarget?.name ?? "結果區", action: voiceAction); saveUsage()
+                             app: place, action: voiceAction); saveUsage()
                 if snapshot.saveHistory {
-                    history.insert(DictationRecord(rawText: raw, text: output, action: voiceAction, backend: snapshot.speechBackend,
-                        duration: duration, destination: inputTarget?.name ?? "結果區"), at: 0)
+                    history.insert(DictationRecord(rawText: raw, text: voiceAction == .hyday ? result : output, action: voiceAction, backend: snapshot.speechBackend,
+                        duration: duration, destination: place), at: 0)
                     history = Array(history.prefix(200)); saveHistory()
                 }
                 // Insertion or clipboard fallback finishes before hiding; the result remains available.
                 phase = delivered ? .idle : .done; onPanelChange?()
+                if voiceAction == .hyday {
+                    // Confirm briefly, then get out of the way.
+                    try? await Task.sleep(for: .seconds(2))
+                    if sessionID == current, phase == .done { phase = .idle; onPanelChange?() }
+                }
             } catch is CancellationError { }
             catch { if sessionID == current { fail(error) } }
         }
@@ -376,7 +404,7 @@ final class AppModel: ObservableObject {
             try SpeechCLIConfiguration.validate(settings)
         case .api: try validateAPI(settings.speechAPI, account: "speech")
         }
-        if action != .dictate && settings.textBackend == .basic { throw TalkError("翻譯與提問需要文字 AI，請在「文字整理」選擇本機 AI 或 API Key。") }
+        if action != .dictate && action != .hyday && settings.textBackend == .basic { throw TalkError("翻譯與提問需要文字 AI，請在「文字整理」選擇本機 AI 或 API Key。") }
         guard settings.requiresTextModel(for: action) else { return }
         if settings.textBackend == .local {
             guard !(settings.localTextModel ?? "").isEmpty else { throw TalkError("請在「文字整理」選擇本機文字模型。") }

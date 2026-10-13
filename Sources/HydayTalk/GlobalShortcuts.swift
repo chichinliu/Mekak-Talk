@@ -49,11 +49,17 @@ final class GlobalShortcuts {
             // including when both keys are down or Shift predates tap startup.
             let leftShift = event.flags.rawValue & UInt64(NX_DEVICELSHIFTKEYMASK) != 0
             let rightShift = event.flags.rawValue & UInt64(NX_DEVICERSHIFTKEYMASK) != 0
-            let otherModifier = (rightShift && !leftShift) || !event.flags.intersection([.maskCommand, .maskControl, .maskAlternate]).isEmpty
+            let otherModifier = (rightShift && !leftShift) || !event.flags.intersection([.maskCommand, .maskAlternate]).isEmpty
+            let control = event.flags.contains(.maskControl)
             if code == 63 {
                 action = state.fnChanged(down: event.flags.contains(.maskSecondaryFn),
-                                         leftShift: leftShift, otherModifier: otherModifier)
+                                         leftShift: leftShift, otherModifier: otherModifier, control: control)
                 consume = true
+            } else if code == 59 || code == 62 {
+                // fn + Control starts a text question.
+                action = otherModifier ? nil : state.controlChanged(down: control)
+                if otherModifier { state.otherModifierChanged() }
+                consume = action != nil
             } else if code == 56, !otherModifier {
                 action = state.shiftChanged(down: leftShift)
                 consume = action != nil

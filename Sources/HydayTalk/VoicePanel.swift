@@ -129,8 +129,15 @@ struct VoiceBarView: View {
                 Text(elapsedText).font(Typography.font(.body, weight: .medium)).monospacedDigit()
                     .fixedSize().padding(.horizontal, 4).accessibilityLabel("錄音時間").accessibilityValue(elapsedText)
             } else {
-                Text(compactTitle).font(Typography.font(.caption, weight: .semibold)).lineLimit(1)
-                    .help(state.notice.isEmpty ? compactTitle : state.notice).fixedSize()
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(compactTitle).font(Typography.font(.caption, weight: .semibold)).lineLimit(1)
+                        .help(state.notice.isEmpty ? compactTitle : state.notice)
+                    // A Hyday entry is not inserted anywhere, so preview what was written.
+                    if state.phase == .done, state.action == .hyday, !state.result.isEmpty {
+                        Text(state.result).font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+                            .lineLimit(1).truncationMode(.tail)
+                    }
+                }
                 Spacer(minLength: 0)
             }
             if state.phase == .recording {
@@ -156,6 +163,7 @@ struct VoiceBarView: View {
             case .dictate: return "錄音中"
             case .translate: return "翻譯錄音"
             case .ask: return "提問錄音"
+            case .hyday: return "Hyday 錄音"
             }
         case .transcribing: return "辨識中"
         case .processing:
@@ -163,8 +171,9 @@ struct VoiceBarView: View {
             case .dictate: return "整理中"
             case .translate: return "翻譯中"
             case .ask: return "回應中"
+            case .hyday: return "寫入中"
             }
-        case .done: return "已完成"
+        case .done: return state.action == .hyday ? "已記到 Hyday" : "已完成"
         case .failed: return "處理失敗"
         }
     }

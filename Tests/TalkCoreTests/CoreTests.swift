@@ -12,9 +12,22 @@ final class ShortcutTests: XCTestCase {
     func testFnSpaceDoesNotAlsoDictate() {
         var state = FnShortcutState()
         _ = state.fnChanged(down: true, leftShift: false)
-        XCTAssertEqual(state.keyDown(code: 49, repeated: false, recording: false), .voice(.ask))
+        XCTAssertEqual(state.keyDown(code: 49, repeated: false, recording: false), .voice(.hyday))
         XCTAssertNil(state.keyDown(code: 49, repeated: true, recording: false))
         XCTAssertNil(state.fnChanged(down: false, leftShift: false))
+    }
+    func testFnControlAsksInEitherKeyOrder() {
+        var state = FnShortcutState()
+        _ = state.fnChanged(down: true, leftShift: false)
+        XCTAssertEqual(state.controlChanged(down: true), .voice(.ask))
+        XCTAssertNil(state.controlChanged(down: true))
+        XCTAssertNil(state.fnChanged(down: false, leftShift: false))
+        state.reset()
+        XCTAssertNil(state.controlChanged(down: true))
+        XCTAssertEqual(state.fnChanged(down: true, leftShift: false, control: true), .voice(.ask))
+        XCTAssertNil(state.fnChanged(down: false, leftShift: false))
+        XCTAssertEqual(VoiceAction.ask.shortcut, "fn + Control")
+        XCTAssertEqual(VoiceAction.hyday.shortcut, "fn + Space")
     }
     func testTranslateWorksInEitherKeyOrder() {
         var state = FnShortcutState()

@@ -321,7 +321,14 @@ struct HourGrid: View {
 
 struct ActionShare: View {
     let counts: [VoiceAction: Int]
-    private func tint(_ action: VoiceAction) -> Color { action == .dictate ? Palette.accent : (action == .translate ? Palette.action : Palette.ai) }
+    private func tint(_ action: VoiceAction) -> Color {
+        switch action {
+        case .dictate: return Palette.accent
+        case .translate: return Palette.action
+        case .ask: return Palette.ai
+        case .hyday: return Palette.success
+        }
+    }
     var body: some View {
         let total = max(1, counts.values.reduce(0, +))
         VStack(alignment: .leading, spacing: 16) {

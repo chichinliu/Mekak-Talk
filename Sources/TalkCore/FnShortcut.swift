@@ -8,15 +8,19 @@ public struct FnShortcutState {
     public private(set) var fnDown = false
     private var usedInChord = false
     private var leftShiftDown = false
+    private var controlDown = false
     public init() {}
 
-    public mutating func fnChanged(down: Bool, leftShift: Bool, otherModifier: Bool = false) -> ShortcutAction? {
+    public mutating func fnChanged(down: Bool, leftShift: Bool, otherModifier: Bool = false, control: Bool = false) -> ShortcutAction? {
         guard down != fnDown else { return nil }
         fnDown = down
         leftShiftDown = leftShift
+        controlDown = control
         if down {
-            usedInChord = leftShift || otherModifier
-            return leftShift && !otherModifier ? .voice(.translate) : nil
+            usedInChord = leftShift || otherModifier || control
+            if otherModifier { return nil }
+            if leftShift { return control ? nil : .voice(.translate) }
+            return control ? .voice(.ask) : nil
         }
         return usedInChord ? nil : .voice(.dictate)
     }
@@ -29,6 +33,14 @@ public struct FnShortcutState {
         return .voice(.translate)
     }
 
+    public mutating func controlChanged(down: Bool) -> ShortcutAction? {
+        let newlyDown = down && !controlDown
+        controlDown = down
+        guard fnDown, newlyDown, !usedInChord else { return nil }
+        usedInChord = true
+        return .voice(.ask)
+    }
+
     public mutating func otherModifierChanged() {
         if fnDown { usedInChord = true }
     }
@@ -36,9 +48,9 @@ public struct FnShortcutState {
     public mutating func keyDown(code: UInt16, repeated: Bool, recording: Bool) -> ShortcutAction? {
         if code == 53, recording, !repeated { return .cancel }
         guard fnDown, !repeated else { return nil }
-        let canAsk = !usedInChord
+        let canRecord = !usedInChord
         usedInChord = true
-        return code == 49 && canAsk ? .voice(.ask) : nil
+        return code == 49 && canRecord ? .voice(.hyday) : nil
     }
     public mutating func reset() { self = FnShortcutState() }
 }
