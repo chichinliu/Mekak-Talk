@@ -14,8 +14,26 @@ enum DictationFormatting {
         }
     }
 
+    /// A long reply squeezed into one paragraph is split every two or three sentences.
+    static func paragraphs(_ text: String) -> String {
+        guard !text.contains("\n"), !text.contains("```"), text.count >= 90 else { return text }
+        var sentences: [String] = []; var current = ""
+        for character in text {
+            current.append(character)
+            if "。！？!?".contains(character) { sentences.append(current); current = "" }
+        }
+        if !current.trimmingCharacters(in: .whitespaces).isEmpty { sentences.append(current) }
+        guard sentences.count >= 4 else { return text }
+        let groups = Int((Double(sentences.count) / 2.5).rounded())
+        let size = Int((Double(sentences.count) / Double(max(2, groups))).rounded(.up))
+        return stride(from: 0, to: sentences.count, by: size)
+            .map { sentences[$0..<min($0 + size, sentences.count)].joined().trimmingCharacters(in: .whitespaces) }
+            .joined(separator: "\n\n")
+    }
+
     static func apply(_ text: String, layout: DictationLayout) -> String {
-        guard layout != .automatic, !text.contains("```") else { return text }
+        if layout == .automatic { return paragraphs(text) }
+        guard !text.contains("```") else { return text }
         let lines = text.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         guard !lines.isEmpty else { return text }
         let matches = lines.map { marker.firstMatch(in: $0, range: NSRange($0.startIndex..., in: $0)) }

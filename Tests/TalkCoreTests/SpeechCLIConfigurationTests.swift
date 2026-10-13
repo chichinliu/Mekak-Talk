@@ -56,4 +56,18 @@ final class SpeechCLIConfigurationTests: XCTestCase {
         settings.speechCLIArguments = "--language zh"
         XCTAssertThrowsError(try SpeechCLIConfiguration.validate(settings))
     }
+
+    func testLocalWhisperReceivesTermsAsAnInitialPrompt() {
+        var settings = TalkSettings(); settings.locale = "zh-TW"; settings.whisperModel = "/m.bin"
+        let file = URL(fileURLWithPath: "/tmp/a.wav")
+        let arguments = SpeechTranscription.whisperArguments(settings: settings, file: file, prefix: "/tmp/t", hints: ["Hyday", "Life Log"])
+        let prompt = arguments.firstIndex(of: "--prompt").map { arguments[$0 + 1] }
+        XCTAssertEqual(prompt, "以下是台灣繁體中文的口語，可能提到：Hyday、Life Log。")
+        XCTAssertEqual(Array(arguments.prefix(6)), ["-m", "/m.bin", "-f", "/tmp/a.wav", "-l", "zh"])
+        // Without terms Traditional Chinese is still requested.
+        let plain = SpeechTranscription.whisperArguments(settings: settings, file: file, prefix: "/tmp/t", hints: [])
+        XCTAssertEqual(plain.firstIndex(of: "--prompt").map { plain[$0 + 1] }, "以下是台灣繁體中文的口語。")
+        let many = SpeechTranscription.whisperArguments(settings: settings, file: file, prefix: "/tmp/t", hints: (0..<300).map { "詞\($0)" })
+        XCTAssertLessThanOrEqual(many[many.firstIndex(of: "--prompt")! + 1].count, 220)
+    }
 }

@@ -41,4 +41,17 @@ final class DictationFormattingTests: XCTestCase {
         settings.writingStyle = .verbatim
         XCTAssertFalse(settings.requiresTextModel(for: .dictate))
     }
+
+    func testLongSingleParagraphIsSplitIntoReadableParagraphs() {
+        var settings = TalkSettings(); settings.textBackend = .local; settings.locale = "zh-TW"
+        let long = "Whisper模型的速度很快，但我覺得不太穩定。像我平常講話很快，它抓不太到。而且它都不會自動分段，我還是希望可以有分段、列表等這種常見的用法。尤其是當我說的話越來越長的時候，我就更需要分段的功能，而不是整個都擠在一起。"
+        let output = TextProcessing.formatOutput(long, action: .dictate, settings: settings)
+        let paragraphs = output.components(separatedBy: "\n\n")
+        XCTAssertGreaterThanOrEqual(paragraphs.count, 2)
+        XCTAssertEqual(paragraphs.joined(), long)
+        // Short text and text the model already laid out stay as they are.
+        XCTAssertEqual(TextProcessing.formatOutput("今天天氣很好。我們去散步。", action: .dictate, settings: settings), "今天天氣很好。我們去散步。")
+        let laidOut = "第一段說明。\n\n第二段說明。"
+        XCTAssertEqual(TextProcessing.formatOutput(laidOut, action: .dictate, settings: settings), laidOut)
+    }
 }

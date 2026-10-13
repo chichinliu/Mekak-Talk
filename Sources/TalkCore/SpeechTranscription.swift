@@ -14,8 +14,8 @@ public enum SpeechTranscription {
             let prefix = file.deletingLastPathComponent().appendingPathComponent("transcript").path
             do {
                 _ = try await ProcessRunner.run(executable: settings.whisperExecutable,
-                    arguments: ["-m", (settings.whisperModel as NSString).expandingTildeInPath, "-f", file.path,
-                                "-l", settings.languageCode, "-otxt", "-of", prefix, "-nt", "-np"], timeout: 180)
+                    arguments: whisperArguments(settings: settings, file: file, prefix: prefix,
+                                                hints: hints ?? settings.activeDictionary.map(\.replacement)), timeout: 180)
             } catch is CancellationError { throw CancellationError() }
             catch { throw TalkError("本機語音辨識未完成，請確認模型已下載後重試。") }
             let url = URL(fileURLWithPath: prefix + ".txt")
@@ -35,6 +35,21 @@ public enum SpeechTranscription {
                 language: settings.languageCode, dictionary: hints ?? settings.dictionary.map(\.replacement), session: session)
         }
         return try validatedText(output)
+    }
+
+    /// Whisper biases toward words in its initial prompt, so dictionary and Hyday terms are
+    /// spelled right, and a Traditional Chinese prompt keeps the output in Traditional script.
+    public static func whisperArguments(settings: TalkSettings, file: URL, prefix: String, hints: [String]) -> [String] {
+        var arguments = ["-m", (settings.whisperModel as NSString).expandingTildeInPath, "-f", file.path,
+                         "-l", settings.languageCode, "-otxt", "-of", prefix, "-nt", "-np"]
+        let chinese = settings.locale == "zh-TW"
+        var terms: [String] = []
+        for term in hints where (terms + [term]).joined(separator: "、").count <= 180 { terms.append(term) }
+        let prompt = chinese
+            ? (terms.isEmpty ? "以下是台灣繁體中文的口語。" : "以下是台灣繁體中文的口語，可能提到：\(terms.joined(separator: "、"))。")
+            : (terms.isEmpty ? "" : terms.joined(separator: ", ") + ".")
+        if !prompt.isEmpty { arguments += ["--prompt", prompt] }
+        return arguments
     }
 
     public static func validatedText(_ output: String) throws -> String {
