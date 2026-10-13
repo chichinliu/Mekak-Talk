@@ -366,19 +366,49 @@ struct PermissionsView: View {
 struct HistoryView: View {
     @ObservedObject var model: AppModel
     @State private var search = ""
+    @State private var filter: VoiceAction? = nil
     @State private var confirmClear = false
+    @State private var hovered: UUID?
     private var records: [DictationRecord] {
-        model.history.filter { search.isEmpty || $0.text.localizedCaseInsensitiveContains(search) || $0.destination.localizedCaseInsensitiveContains(search) }
+        model.history.filter { record in
+            (filter == nil || record.action == filter)
+                && (search.isEmpty || record.text.localizedCaseInsensitiveContains(search) || record.destination.localizedCaseInsensitiveContains(search))
+        }
     }
-    private func actionTag(_ action: VoiceAction) -> some View {
-        let tint: Color = action == .dictate ? Palette.accent : (action == .translate ? Palette.action : Palette.ai)
-        return Text(action.title).font(Typography.font(.caption, weight: .medium)).foregroundStyle(tint)
-            .padding(.horizontal, 9).padding(.vertical, 3)
-            .background(Palette.surface, in: Capsule()).shadow(color: Color.black.opacity(0.06), radius: 1.5, y: 1)
+    /// Records grouped by day, newest first, so a long history stays scannable.
+    private var days: [(day: Date, records: [DictationRecord])] {
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: records) { calendar.startOfDay(for: $0.date) }
+        return grouped.keys.sorted(by: >).map { ($0, grouped[$0]!.sorted { $0.date > $1.date }) }
+    }
+    private func dayTitle(_ day: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(day) { return "今天" }
+        if calendar.isDateInYesterday(day) { return "昨天" }
+        return day.formatted(.dateTime.month(.defaultDigits).day().weekday(.wide).locale(Locale(identifier: "zh-TW")))
+    }
+    private func filterTitle(_ value: VoiceAction?) -> String {
+        switch value {
+        case nil: return "所有"
+        case .dictate: return "聽寫"
+        case .translate: return "翻譯"
+        case .ask: return "提問"
+        case .hyday: return "Hyday"
+        }
+    }
+    private func tint(_ action: VoiceAction) -> Color {
+        switch action {
+        case .dictate: return Palette.accent
+        case .translate: return Palette.action
+        case .ask: return Palette.ai
+        case .hyday: return Palette.success
+        }
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(spacing: 12) {
+                AlignSegmentedPicker(title: "紀錄類型", values: [nil] + VoiceAction.allCases.map { Optional($0) },
+                                     selection: $filter, label: filterTitle).fixedSize()
                 TextField("搜尋聽寫紀錄", text: $search, prompt: Text("搜尋文字或 App").foregroundStyle(Palette.muted))
                     .textFieldStyle(AlignTextFieldStyle()).accessibilityLabel("搜尋聽寫紀錄")
                 Button("清除紀錄", role: .destructive) { confirmClear = true }.buttonStyle(AlignButtonStyle(kind: .destructive)).disabled(model.history.isEmpty)
@@ -389,29 +419,24 @@ struct HistoryView: View {
                     Image(systemName: "text.bubble").font(IconToken.font(.large, weight: .medium)).foregroundStyle(Palette.action)
                         .frame(width: 56, height: 56).background(Palette.actionSurface, in: RoundedRectangle(cornerRadius: 14))
                         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.actionBorder, lineWidth: 1))
-                    Text(search.isEmpty ? "尚無聽寫紀錄" : "查無符合的紀錄").font(Typography.font(.brand, weight: .medium)).singleLineHeading()
-                    Text(search.isEmpty ? "完成聽寫後，文字紀錄將顯示於此。" : "請更換關鍵字或清除搜尋條件。")
+                    Text(search.isEmpty && filter == nil ? "尚無聽寫紀錄" : "查無符合的紀錄").font(Typography.font(.brand, weight: .medium)).singleLineHeading()
+                    Text(search.isEmpty && filter == nil ? "完成聽寫後，文字紀錄將顯示於此。" : "請更換關鍵字或類型。")
                         .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
-                    if !search.isEmpty { Button("清除搜尋") { search = "" } }
+                    if !search.isEmpty || filter != nil { Button("清除搜尋條件") { search = ""; filter = nil } }
                 }.frame(maxWidth: .infinity).padding(.vertical, 70).surface()
             } else {
-                LazyVStack(spacing: 12) {
-                    ForEach(records) { record in
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Text(record.date, format: .dateTime.month().day().hour().minute()).font(Typography.font(.caption)).foregroundStyle(Palette.muted)
-                                Text("· \(record.destination) · \(record.backend.title)").font(Typography.font(.caption)).foregroundStyle(Palette.muted)
-                                Spacer(); actionTag(record.action)
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    ForEach(days, id: \.day) { group in
+                        Text(dayTitle(group.day)).font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+                            .padding(.top, 10).padding(.leading, 4)
+                        VStack(spacing: 0) {
+                            ForEach(Array(group.records.enumerated()), id: \.element.id) { index, record in
+                                if index > 0 { Divider().padding(.leading, 16) }
+                                row(record)
                             }
-                            Text(record.text).font(Typography.font(.body)).lineSpacing(Typography.paragraphSpacing).textSelection(.enabled)
-                            HStack {
-                                Text("\(TextProcessing.wordCount(record.text)) 字詞 · \(Int(record.duration)) 秒").font(Typography.font(.caption)).foregroundStyle(Palette.muted)
-                                Spacer()
-                                Button("複製") { TextInsertion.copy(record.text); model.notice = "已複製文字。" }.buttonStyle(AlignButtonStyle()).controlSize(.regular)
-                                Button { model.removeRecord(record.id) } label: { Image(systemName: "trash").frame(width: 20, height: 20) }
-                                    .buttonStyle(AlignButtonStyle(kind: .ghost)).help("刪除此筆紀錄").accessibilityLabel("刪除此筆紀錄")
-                            }
-                        }.frame(maxWidth: .infinity, alignment: .leading).surface()
+                        }
+                        .background(Palette.card, in: RoundedRectangle(cornerRadius: 14))
+                        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Palette.border, lineWidth: 1))
                     }
                 }
             }
@@ -419,6 +444,29 @@ struct HistoryView: View {
             Button("取消", role: .cancel) {}
             Button("清除所有紀錄", role: .destructive) { model.clearHistory() }
         } message: { Text("這項操作無法復原。") }
+    }
+
+    private func row(_ record: DictationRecord) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Text(record.date, format: .dateTime.hour(.twoDigits(amPM: .omitted)).minute())
+                .font(Typography.font(.caption)).monospacedDigit().foregroundStyle(Palette.muted).frame(width: 40, alignment: .leading)
+            if record.action != .dictate {
+                Text(filterTitle(record.action)).font(Typography.font(.caption, weight: .medium)).foregroundStyle(tint(record.action)).fixedSize()
+            }
+            Text(record.text).font(Typography.font(.body)).lineSpacing(3).textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 2) {
+                Button { TextInsertion.copy(record.text); model.notice = "已複製文字。" } label: {
+                    Image(systemName: "doc.on.doc").frame(width: 18, height: 18)
+                }.buttonStyle(AlignButtonStyle(kind: .ghost)).help("複製文字").accessibilityLabel("複製文字")
+                Button { model.removeRecord(record.id) } label: {
+                    Image(systemName: "trash").frame(width: 18, height: 18)
+                }.buttonStyle(AlignButtonStyle(kind: .ghost)).help("刪除此筆紀錄").accessibilityLabel("刪除此筆紀錄")
+            }.opacity(hovered == record.id ? 1 : 0)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 9).contentShape(Rectangle())
+        .onHover { inside in hovered = inside ? record.id : (hovered == record.id ? nil : hovered) }
+        .help("\(record.destination) · \(record.backend.title) · \(TextProcessing.wordCount(record.text)) 字 · \(Int(record.duration)) 秒")
     }
 }
 
