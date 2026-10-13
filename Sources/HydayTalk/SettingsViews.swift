@@ -204,7 +204,7 @@ struct DictionaryView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
-            SettingsGroup(title: "新增詞彙", detail: "加入的詞彙會讓語音辨識和文字 AI 更容易寫對。如果知道它常被聽錯成什麼，也可以一起填上，辨識到時會自動換成正確的寫法。") {
+            SettingsGroup(title: "新增詞彙", detail: "加入的詞彙可協助語音辨識與文字 AI 寫出正確的內容。若知道該詞彙常被辨識成哪些文字，可一併填寫，辨識時會自動替換為正確的詞彙。") {
                 SettingsBlock {
                     HStack(alignment: .bottom, spacing: 12) {
                         LabeledField("詞彙", placeholder: "例如：Hyday", text: $term)
@@ -261,7 +261,8 @@ struct DictionaryView: View {
             Spacer(minLength: 0)
             Button { DictionaryLearning.remove(entry, from: &model.settings) } label: { Image(systemName: "xmark").frame(width: 14, height: 14) }
                 .buttonStyle(AlignButtonStyle(kind: .ghost)).help("刪除詞彙 \(entry.term)").accessibilityLabel("刪除詞彙 \(entry.term)")
-                .opacity(hovered == entry.id ? 1 : 0)
+                // Faint until hovered, but never invisible, so keyboard users can see what they focus.
+                .opacity(hovered == entry.id ? 1 : 0.35)
         }
         .padding(.leading, 12).padding(.trailing, 4).frame(minHeight: 38)
         .background(Palette.surface, in: RoundedRectangle(cornerRadius: 10))

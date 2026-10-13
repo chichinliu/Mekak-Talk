@@ -149,7 +149,8 @@ public struct DictionaryEntry: Codable, Identifiable, Equatable, Sendable {
         set { replacement = newValue }
     }
     /// Only manual entries may name a misheard spelling, which is then replaced by the term.
-    public var misheard: String? { heard.isEmpty ? nil : heard }
+    /// Learned entries saved by older versions still carry the misheard text; it is ignored, so they never replace.
+    public var misheard: String? { heard.isEmpty || isAutomatic ? nil : heard }
     public init(term: String, misheard: String? = nil, isAutomatic: Bool = false) {
         heard = misheard ?? ""; replacement = term; automatic = isAutomatic ? true : nil
     }

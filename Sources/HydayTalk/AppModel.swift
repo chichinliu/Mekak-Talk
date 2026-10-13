@@ -531,8 +531,8 @@ final class AppModel: ObservableObject {
                 // Without a text AI only English words, numbers and acronyms are safe to learn.
                 if snapshot.textBackend == .basic {
                     guard CorrectionJudge.learnableWithoutAI(correction.corrected) else { typos += 1; continue }
-                    guard !Task.isCancelled, let self, self.settings.learnsFromCorrections else { return }
-                    DictionaryLearning.learn(correction, into: &self.settings); learned += 1; continue
+                    guard !Task.isCancelled, let model = self, model.settings.learnsFromCorrections else { break }
+                    DictionaryLearning.learn(correction, into: &model.settings); learned += 1; continue
                 }
                 guard let prompt = try? CorrectionJudge.prompt(for: correction),
                       let answer = try? await self?.complete(prompt: prompt, settings: snapshot) else { failed += 1; continue }

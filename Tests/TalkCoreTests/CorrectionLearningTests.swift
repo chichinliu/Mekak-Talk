@@ -171,3 +171,17 @@ final class CorrectionJudgeScopeTests: XCTestCase {
         for word in ["王小明", "應該", "a", "再"] { XCTAssertFalse(CorrectionJudge.learnableWithoutAI(word), word) }
     }
 }
+
+final class DictionaryMigrationTests: XCTestCase {
+    func testOldLearnedEntriesBecomeHintsWithoutReplacing() throws {
+        var stored = try JSONSerialization.jsonObject(with: JSONEncoder().encode(TalkSettings())) as! [String: Any]
+        stored["dictionary"] = [["id": UUID().uuidString, "heard": "Haidai", "replacement": "Hyday", "automatic": true, "pending": true],
+                                ["id": UUID().uuidString, "heard": "Jeny", "replacement": "Jenny"]]
+        var settings = try JSONDecoder().decode(TalkSettings.self, from: JSONSerialization.data(withJSONObject: stored))
+        settings.textBackend = .local
+        XCTAssertNil(settings.dictionary[0].misheard)
+        XCTAssertEqual(settings.dictionary[1].misheard, "Jeny")
+        XCTAssertEqual(TextProcessing.formatOutput("請 Haidai 和 Jeny 確認。", action: .dictate, settings: settings), "請 Haidai 和 Jenny 確認。")
+        XCTAssertFalse(try TextProcessing.prompt(action: .dictate, transcript: "x", selection: "", settings: settings).contains("Haidai"))
+    }
+}
