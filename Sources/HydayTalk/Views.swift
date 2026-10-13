@@ -252,11 +252,13 @@ struct HomeView: View {
                 .homeKeyboardActivation(toggleRecording)
                 .disabled(model.phase.busy && model.phase != .recording)
                 .help(model.settings.autoInsert ? "完成後插入原輸入框，無法插入時自動複製文字。" : "開始聽寫，結果保留供複製。")
-        }.padding(.horizontal, 16).padding(.vertical, 14).frame(maxWidth: .infinity, minHeight: 88)
-            .background(LinearGradient(colors: [Palette.accentSurface, Palette.surface], startPoint: .leading, endPoint: .trailing),
-                        in: RoundedRectangle(cornerRadius: 14))
-            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.accentBorder, lineWidth: 1))
-            .padding(-14).surface()
+        }.padding(.horizontal, DesignTokens.Surfaces.padding).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 96)
+            // The one card framed by its own orange border instead of the shared white shell.
+            .background(LinearGradient(colors: [Palette.accentSurface, Palette.card], startPoint: .leading, endPoint: .trailing),
+                        in: RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius))
+            .overlay(RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius).strokeBorder(Palette.accentBorder, lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.04), radius: 1, y: 1)
+            .shadow(color: Color.black.opacity(0.04), radius: 8, y: 4)
     }
     private var outputPreview: some View {
         VStack(alignment: .leading, spacing: 14) {
