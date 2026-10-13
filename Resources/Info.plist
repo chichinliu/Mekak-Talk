@@ -1,18 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-    <key>CFBundleDevelopmentRegion</key><string>zh_TW</string>
-    <key>CFBundleExecutable</key><string>HydayTalk</string>
-    <key>CFBundleIdentifier</key><string>tw.muki.hyday-talk</string>
-    <key>CFBundleName</key><string>Hyday Talk</string>
-    <key>CFBundleDisplayName</key><string>Hyday Talk</string>
-    <key>CFBundlePackageType</key><string>APPL</string>
-    <key>CFBundleShortVersionString</key><string>0.1.0</string>
-    <key>CFBundleVersion</key><string>1</string>
-    <key>CFBundleIconFile</key><string>AppIcon</string>
-    <key>LSMinimumSystemVersion</key><string>14.0</string>
-    <key>NSHighResolutionCapable</key><true/>
-    <key>NSPrincipalClass</key><string>NSApplication</string>
-    <key>NSMicrophoneUsageDescription</key><string>Hyday Talk 需要麥克風，將你說的話轉成文字。</string>
-    <key>NSSpeechRecognitionUsageDescription</key><string>選擇系統辨識時，Hyday Talk 使用 macOS 語音辨識服務。</string>
-</dict></plist>
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh_TW</string>
+	<key>CFBundleDisplayName</key>
+	<string>Hyday Talk</string>
+	<key>CFBundleExecutable</key>
+	<string>HydayTalk</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>tw.muki.hyday-talk</string>
+	<key>CFBundleName</key>
+	<string>Hyday Talk</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.1</string>
+	<key>CFBundleVersion</key>
+	<string>2</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Hyday Talk 需要麥克風，將你說的話轉成文字。</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>選擇系統辨識時，Hyday Talk 使用 macOS 語音辨識服務。</string>
+</dict>
+</plist>
