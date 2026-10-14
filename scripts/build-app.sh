@@ -2,13 +2,17 @@
 set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJECT_DIR"
-APP_DIR="$PROJECT_DIR/dist/Hyday Talk.app"
+# VARIANT=dev builds "Hyday Talk Dev": a debug build with its own bundle identifier and settings.
+VARIANT="${VARIANT:-release}"
+APP_NAME="Hyday Talk"; CONFIGURATION=release
+if [[ "$VARIANT" == dev ]]; then APP_NAME="Hyday Talk Dev"; CONFIGURATION=debug; fi
+APP_DIR="$PROJECT_DIR/dist/$APP_NAME.app"
 ensure_app_stopped() {
     local app_pid command_path
     while read -r app_pid; do
         command_path="$(ps -p "$app_pid" -o comm= 2>/dev/null || true)"
         if [[ "$command_path" == "$APP_DIR/Contents/MacOS/HydayTalk" ]]; then
-            printf '請先關閉權限指引並完全結束 Hyday Talk，再執行建置。\n' >&2
+            printf '請先關閉權限指引並完全結束 %s，再執行建置。\n' "$APP_NAME" >&2
             return 1
         fi
     done < <(pgrep -x HydayTalk || true)
@@ -18,10 +22,10 @@ source "$PROJECT_DIR/scripts/signing-identity.sh"
 select_signing_identity
 bash scripts/build-whisper-runtime.sh
 bash scripts/build-transcribe-runtime.sh
-swift build -c release
-BINARY_DIR="$(swift build -c release --show-bin-path)"
+swift build -c "$CONFIGURATION"
+BINARY_DIR="$(swift build -c "$CONFIGURATION" --show-bin-path)"
 PACKAGE_STAGE="$(mktemp -d "$PROJECT_DIR/.build/app-package.XXXXXX")"
-STAGED_APP="$PACKAGE_STAGE/Hyday Talk.app"
+STAGED_APP="$PACKAGE_STAGE/$APP_NAME.app"
 cleanup_package() {
     if [[ -d "$PACKAGE_STAGE/previous.app" && ! -e "$APP_DIR" ]]; then
         mv "$PACKAGE_STAGE/previous.app" "$APP_DIR"
@@ -36,6 +40,11 @@ cp .build/whisper-runtime/source/LICENSE "$STAGED_APP/Contents/Resources/Whisper
 cp .build/transcribe-runtime/transcribe-cli "$STAGED_APP/Contents/Helpers/transcribe-cli"
 cp .build/transcribe-runtime/source/LICENSE "$STAGED_APP/Contents/Resources/Transcribe-LICENSE.txt"
 cp Resources/Info.plist "$STAGED_APP/Contents/Info.plist"
+if [[ "$VARIANT" == dev ]]; then
+    plist="$STAGED_APP/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$plist").dev" \
+        -c "Set :CFBundleName $APP_NAME" -c "Set :CFBundleDisplayName $APP_NAME" "$plist"
+fi
 cat Sources/HydayTalk/DesignTokens.swift scripts/make-icon.swift > "$PACKAGE_STAGE/make-icon.swift"
 swift "$PACKAGE_STAGE/make-icon.swift" "$STAGED_APP/Contents/Resources/AppIcon.icns"
 codesign --force --timestamp --sign "$SIGNING_IDENTITY" --options runtime "$STAGED_APP/Contents/Helpers/whisper-cli"

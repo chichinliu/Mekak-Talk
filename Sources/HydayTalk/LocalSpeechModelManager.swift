@@ -11,7 +11,7 @@ final class LocalSpeechModelManager: ObservableObject {
     private var operation: Task<Void, Never>?
     private var generation = UUID()
     private var prepared = false
-    private let directory = LocalStore().directory.appendingPathComponent("Models", isDirectory: true)
+    private let directory = LocalStore.releaseDirectory.appendingPathComponent("Models", isDirectory: true)
 
     static var enginePath: String { Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/whisper-cli").path }
     var engineReady: Bool { CLIExecutableDiscovery.isExecutable(Self.enginePath) }

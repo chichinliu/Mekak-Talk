@@ -31,10 +31,23 @@ enum KeyStore {
 }
 
 struct LocalStore {
+    /// The development build carries a `.dev` bundle identifier and keeps its own settings and history.
+    static let isDevelopment = Bundle.main.bundleIdentifier?.hasSuffix(".dev") == true
+    private static let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    /// The release build's folder; speech models live here for both builds so they are downloaded once.
+    static let releaseDirectory = base.appendingPathComponent("HydayTalk", isDirectory: true)
+
     let directory: URL
     init() {
-        directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("HydayTalk", isDirectory: true)
+        guard Self.isDevelopment else { directory = Self.releaseDirectory; return }
+        directory = Self.base.appendingPathComponent("HydayTalk Dev", isDirectory: true)
+        // Start from a copy of the release settings, so the dev build is usable straight away.
+        let manager = FileManager.default
+        if !manager.fileExists(atPath: directory.path) {
+            try? manager.createDirectory(at: directory, withIntermediateDirectories: true)
+            try? manager.copyItem(at: Self.releaseDirectory.appendingPathComponent("settings.json"),
+                                  to: directory.appendingPathComponent("settings.json"))
+        }
     }
     func load<T: Decodable>(_ type: T.Type, from name: String) throws -> T? {
         let url = directory.appendingPathComponent(name)
