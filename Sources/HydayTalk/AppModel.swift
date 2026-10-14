@@ -316,16 +316,22 @@ final class AppModel: ObservableObject {
         operation = Task {
             defer { if sessionID == current { audio.cancel() } }
             do {
-                let raw: String
+                var raw: String
                 if snapshot.speechBackend == .system {
                     raw = try SpeechTranscription.validatedText(await audio.systemTranscript())
                     if audio.usedPartialTranscript { notice = "系統未回傳完整結果，這次保留最後的辨識文字。" }
                 }
                 else {
                     let file = try await audio.audioFile()
-                    raw = try await SpeechTranscription.transcribe(file: file, settings: snapshot,
-                        key: snapshot.speechBackend == .api ? KeyStore.read("speech") : "", hints: hints)
+                    let key = snapshot.speechBackend == .api ? KeyStore.read("speech") : ""
+                    raw = try await SpeechTranscription.transcribe(file: file, settings: snapshot, key: key, hints: hints)
+                    if RecognitionHints.isEcho(raw, hints: hints) {
+                        // The model recited the hint list instead of the speech; listen again without it.
+                        try Task.checkCancellation()
+                        raw = try await SpeechTranscription.transcribe(file: file, settings: snapshot, key: key, hints: [])
+                    }
                 }
+                if RecognitionHints.isEcho(raw, hints: hints) { throw TalkError("沒有辨識到文字，請再試一次。") }
                 try Task.checkCancellation(); guard sessionID == current else { return }
                 guard !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw TalkError("沒有辨識到文字，請再試一次。") }
                 transcript = raw

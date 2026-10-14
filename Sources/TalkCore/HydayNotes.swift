@@ -164,9 +164,26 @@ public enum RecognitionHints {
         var result: [String] = []
         let manual = dictionary.filter { !$0.isAutomatic }.map(\.term)
         let learned = dictionary.filter(\.isAutomatic).reversed().map(\.term)
-        for term in manual + learned + vocabulary where result.count < limit && !term.isEmpty && !result.contains(term) {
+        // Nested tags such as projects/Hyday are categories; only their last part is something people say.
+        let spoken = vocabulary.map { $0.split(separator: "/").last.map(String.init) ?? $0 }
+        for term in manual + learned + spoken where result.count < limit && !term.isEmpty && !result.contains(term) {
             result.append(term)
         }
         return result
+    }
+
+    /// Recognition models sometimes answer a short clip by reciting the hint list they were given.
+    /// A transcript made mostly of five or more hint terms is that list, not speech.
+    public static func isEcho(_ transcript: String, hints: [String]) -> Bool {
+        var known = Set<String>()
+        for hint in hints {
+            known.insert(hint.lowercased())
+            if let last = hint.split(separator: "/").last { known.insert(last.lowercased()) }
+        }
+        let words = transcript.components(separatedBy: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: "、，,"))).filter { !$0.isEmpty }
+        let matched = words.filter { word in
+            known.contains(word.lowercased()) || word.split(separator: "/").last.map { known.contains($0.lowercased()) } == true
+        }.count
+        return matched >= 5 && matched * 10 >= words.count * 7
     }
 }
