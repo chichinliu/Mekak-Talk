@@ -207,6 +207,7 @@ struct DictionaryView: View {
     @State private var filter: Bool? = nil
     @State private var search = ""
     @State private var hovered: UUID?
+    @State private var adding = false
     private var entries: [DictionaryEntry] {
         RecognitionHints.ordered(model.settings.dictionary).filter { entry in
             (filter == nil || entry.isAutomatic == filter)
@@ -221,20 +222,10 @@ struct DictionaryView: View {
         // A manual entry replaces any term with the same spelling apart from case.
         model.settings.dictionary.removeAll { $0.term.lowercased() == word.lowercased() }
         model.settings.dictionary.append(DictionaryEntry(term: word, misheard: wrong.isEmpty ? nil : wrong))
-        term = ""; misheard = ""
+        term = ""; misheard = ""; adding = false
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
-            SettingsGroup(title: "新增詞彙", detail: "加入的詞彙可協助語音辨識與文字 AI 寫出正確的內容。") {
-                SettingsBlock {
-                    HStack(alignment: .bottom, spacing: 12) {
-                        LabeledField("詞彙", placeholder: "例如：Hyday", text: $term).onSubmit(add)
-                        LabeledField("常聽錯成（選填）", placeholder: "例如：hide day", text: $misheard)
-                        Button("加入", action: add).buttonStyle(AlignButtonStyle(kind: .primary))
-                            .disabled(term.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    }
-                }
-            }
             SettingsGroup(title: "個人辭典", detail: "自動新增的詞彙來自你對插入文字的修正，可於一般設定關閉此功能。") {
                 if model.settings.learnsFromCorrections {
                     SettingsRow(title: "最近一次比對結果",
@@ -263,6 +254,11 @@ struct DictionaryView: View {
                         .padding(.horizontal, 10).frame(height: 36)
                         .background(Palette.surface, in: RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Palette.border, lineWidth: 1))
+                        Button { term = search.trimmingCharacters(in: .whitespacesAndNewlines); adding = true } label: {
+                            Label("新增詞彙", systemImage: "plus")
+                        }
+                        .buttonStyle(AlignButtonStyle(kind: .primary)).fixedSize()
+                        .popover(isPresented: $adding, arrowEdge: .bottom) { addPanel }
                     }
                     let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
                     if entries.isEmpty, !query.isEmpty {
@@ -273,7 +269,7 @@ struct DictionaryView: View {
                                 .buttonStyle(AlignButtonStyle(kind: .primary))
                         }.padding(.vertical, 6)
                     } else if entries.isEmpty {
-                        Label(model.settings.dictionary.isEmpty ? "尚無詞彙，可在上方的新增詞彙加入經常說到的人名、產品或術語。" : "這個分類沒有詞彙。",
+                        Label(model.settings.dictionary.isEmpty ? "尚無詞彙，可按右上方的新增詞彙，加入經常說到的人名、產品或術語。" : "這個分類沒有詞彙。",
                               systemImage: "character.book.closed")
                             .font(Typography.font(.caption)).foregroundStyle(Palette.muted).padding(.vertical, 6)
                     } else {
@@ -284,6 +280,26 @@ struct DictionaryView: View {
                 }
             }
         }.disabled(model.phase.busy)
+    }
+
+    private var addPanel: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("新增詞彙").font(Typography.font(.body).weight(.medium))
+                Text("加入的詞彙可協助語音辨識與文字 AI 寫出正確的內容。")
+                    .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+            }
+            LabeledField("詞彙", placeholder: "例如：Hyday", text: $term).onSubmit(add)
+            LabeledField("常聽錯成（選填）", placeholder: "例如：hide day", text: $misheard).onSubmit(add)
+            HStack {
+                Spacer()
+                Button("取消") { term = ""; misheard = ""; adding = false }
+                    .buttonStyle(AlignButtonStyle()).keyboardShortcut(.cancelAction)
+                Button("加入", action: add).buttonStyle(AlignButtonStyle(kind: .primary)).keyboardShortcut(.defaultAction)
+                    .disabled(term.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(20).frame(width: 340)
     }
 
     private func chip(_ entry: DictionaryEntry) -> some View {
