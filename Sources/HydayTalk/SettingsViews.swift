@@ -35,9 +35,15 @@ private struct DividedLayout: _VariadicView_MultiViewRoot {
     func body(children: _VariadicView.Children) -> some View {
         ForEach(children) { child in
             child
-            if child.id != children.last?.id { Divider().overlay(Palette.border) }
+            if child.id != children.last?.id { Hairline() }
         }
     }
+}
+
+/// A one-pixel line at the screen's own scale, rather than a one-point divider.
+struct Hairline: View {
+    @Environment(\.displayScale) private var scale
+    var body: some View { Rectangle().fill(Palette.border).frame(height: 1 / scale) }
 }
 
 struct SettingsRow<Control: View>: View {
@@ -235,7 +241,6 @@ struct DictionaryView: View {
                             .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
                             .multilineTextAlignment(.trailing).frame(maxWidth: 260, alignment: .trailing)
                     }
-                    Divider()
                 }
                 SettingsBlock {
                     HStack(spacing: 12) {
