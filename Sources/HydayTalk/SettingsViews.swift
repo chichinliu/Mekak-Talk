@@ -213,9 +213,11 @@ struct DictionaryView: View {
                 && (search.isEmpty || entry.term.localizedCaseInsensitiveContains(search) || (entry.misheard ?? "").localizedCaseInsensitiveContains(search))
         }
     }
-    private func add() {
-        let word = term.trimmingCharacters(in: .whitespacesAndNewlines)
-        let wrong = misheard.trimmingCharacters(in: .whitespacesAndNewlines)
+    private func add() { add(term, misheard: misheard) }
+    private func add(_ text: String, misheard heard: String = "") {
+        let word = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let wrong = heard.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !word.isEmpty else { return }
         // A manual entry replaces any term with the same spelling apart from case.
         model.settings.dictionary.removeAll { $0.term.lowercased() == word.lowercased() }
         model.settings.dictionary.append(DictionaryEntry(term: word, misheard: wrong.isEmpty ? nil : wrong))
@@ -226,7 +228,7 @@ struct DictionaryView: View {
             SettingsGroup(title: "新增詞彙", detail: "加入的詞彙可協助語音辨識與文字 AI 寫出正確的內容。") {
                 SettingsBlock {
                     HStack(alignment: .bottom, spacing: 12) {
-                        LabeledField("詞彙", placeholder: "例如：Hyday", text: $term)
+                        LabeledField("詞彙", placeholder: "例如：Hyday", text: $term).onSubmit(add)
                         LabeledField("常聽錯成（選填）", placeholder: "例如：hide day", text: $misheard)
                         Button("加入", action: add).buttonStyle(AlignButtonStyle(kind: .primary))
                             .disabled(term.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -249,11 +251,29 @@ struct DictionaryView: View {
                         AlignSegmentedPicker(title: "詞彙來源", values: [nil, true, false] as [Bool?], selection: $filter) {
                             switch $0 { case nil: return "所有"; case true?: return "自動新增"; case false?: return "手動新增" }
                         }.fixedSize()
-                        TextField("搜尋詞彙", text: $search, prompt: Text("搜尋詞彙").foregroundStyle(Palette.muted))
-                            .textFieldStyle(AlignTextFieldStyle()).accessibilityLabel("搜尋詞彙")
+                        HStack(spacing: 6) {
+                            Image(systemName: "magnifyingglass").font(IconToken.font(.small)).foregroundStyle(Palette.muted)
+                            TextField("搜尋辭典", text: $search, prompt: Text("搜尋辭典").foregroundStyle(Palette.muted))
+                                .textFieldStyle(.plain).accessibilityLabel("搜尋辭典")
+                            if !search.isEmpty {
+                                Button { search = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Palette.faint) }
+                                    .buttonStyle(.plain).help("清除搜尋").accessibilityLabel("清除搜尋")
+                            }
+                        }
+                        .padding(.horizontal, 10).frame(height: 36)
+                        .background(Palette.surface, in: RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Palette.border, lineWidth: 1))
                     }
-                    if entries.isEmpty {
-                        Label(model.settings.dictionary.isEmpty ? "尚無詞彙，可新增經常說到的人名、產品或術語。" : "沒有符合的詞彙。",
+                    let query = search.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if entries.isEmpty, !query.isEmpty {
+                        HStack(spacing: 12) {
+                            Label("辭典裡沒有「\(query)」。", systemImage: "magnifyingglass")
+                                .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+                            Button("加入「\(query)」") { add(query); search = ""; filter = nil }
+                                .buttonStyle(AlignButtonStyle(kind: .primary))
+                        }.padding(.vertical, 6)
+                    } else if entries.isEmpty {
+                        Label(model.settings.dictionary.isEmpty ? "尚無詞彙，可在上方的新增詞彙加入經常說到的人名、產品或術語。" : "這個分類沒有詞彙。",
                               systemImage: "character.book.closed")
                             .font(Typography.font(.caption)).foregroundStyle(Palette.muted).padding(.vertical, 6)
                     } else {
