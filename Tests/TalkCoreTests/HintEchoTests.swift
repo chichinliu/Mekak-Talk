@@ -21,3 +21,14 @@ final class HintEchoTests: XCTestCase {
         XCTAssertFalse(RecognitionHints.isEcho("Hyday Ethan", hints: hints))
     }
 }
+
+final class MisheardSpellingsTests: XCTestCase {
+    func testOneTermCanListSeveralMisheardSpellings() {
+        var settings = TalkSettings()
+        settings.dictionary = [DictionaryEntry(term: "Hyday", misheard: "海得、嗨day, hide day")]
+        XCTAssertEqual(TextProcessing.applyDictionary("海得。", settings: settings), "Hyday。")
+        XCTAssertEqual(TextProcessing.applyDictionary("打開嗨day看日誌", settings: settings), "打開Hyday看日誌")
+        XCTAssertEqual(TextProcessing.applyDictionary("open hide day now", settings: settings), "open Hyday now")
+        XCTAssertEqual(DictionaryEntry(term: "Hyday", misheard: "海得、嗨day, hide day").misheardSpellings, ["海得", "嗨day", "hide day"])
+    }
+}

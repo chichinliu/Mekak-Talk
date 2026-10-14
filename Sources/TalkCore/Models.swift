@@ -151,6 +151,11 @@ public struct DictionaryEntry: Codable, Identifiable, Equatable, Sendable {
     /// Only manual entries may name a misheard spelling, which is then replaced by the term.
     /// Learned entries saved by older versions still carry the misheard text; it is ignored, so they never replace.
     public var misheard: String? { heard.isEmpty || isAutomatic ? nil : heard }
+    /// A term can be misheard several ways; they are entered separated by 、 or commas.
+    public var misheardSpellings: [String] {
+        (misheard ?? "").components(separatedBy: CharacterSet(charactersIn: "、,，"))
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+    }
     public init(term: String, misheard: String? = nil, isAutomatic: Bool = false) {
         heard = misheard ?? ""; replacement = term; automatic = isAutomatic ? true : nil
     }

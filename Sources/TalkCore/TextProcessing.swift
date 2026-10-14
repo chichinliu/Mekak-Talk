@@ -25,8 +25,8 @@ public enum TextProcessing {
     static func applyDictionary(_ text: String, settings: TalkSettings) -> String {
         var text = text
         // Match names as whole words in Latin scripts; Chinese terms have no word separators.
-        for entry in settings.dictionary.sorted(by: { $0.heard.count > $1.heard.count }) {
-            guard let heard = entry.misheard, !entry.term.isEmpty else { continue }
+        let pairs = settings.dictionary.filter { !$0.term.isEmpty }.flatMap { entry in entry.misheardSpellings.map { ($0, entry) } }
+        for (heard, entry) in pairs.sorted(by: { $0.0.count > $1.0.count }) {
             let literal = NSRegularExpression.escapedPattern(for: heard)
             let latin = heard.unicodeScalars.allSatisfy { $0.isASCII }
             let pattern = latin ? "(?<![\\p{L}\\p{N}_])" + literal + "(?![\\p{L}\\p{N}_])" : literal

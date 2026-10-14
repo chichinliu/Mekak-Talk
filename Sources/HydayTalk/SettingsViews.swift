@@ -290,17 +290,20 @@ struct DictionaryView: View {
     private var addPanel: some View {
         VStack(alignment: .leading, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("新增詞彙").font(Typography.font(.body).weight(.medium))
+                Text(model.settings.dictionary.contains { $0.term.lowercased() == term.trimmingCharacters(in: .whitespaces).lowercased() && !term.isEmpty } ? "編輯詞彙" : "新增詞彙")
+                    .font(Typography.font(.body).weight(.medium))
                 Text("加入的詞彙可協助語音辨識與文字 AI 寫出正確的內容。")
                     .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
             }
             LabeledField("詞彙", placeholder: "例如：Hyday", text: $term).onSubmit(add)
-            LabeledField("常聽錯成（選填）", placeholder: "例如：hide day", text: $misheard).onSubmit(add)
+            LabeledField("常聽錯成（選填）", placeholder: "例如：海得、hide day", text: $misheard).onSubmit(add)
+            Text("可填多個寫法，以頓號或逗號分隔。辨識結果中的這些文字會換成詞彙。")
+                .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
             HStack {
                 Spacer()
                 Button("取消") { term = ""; misheard = ""; adding = false }
                     .buttonStyle(AlignButtonStyle()).keyboardShortcut(.cancelAction)
-                Button("加入", action: add).buttonStyle(AlignButtonStyle(kind: .primary)).keyboardShortcut(.defaultAction)
+                Button("儲存", action: add).buttonStyle(AlignButtonStyle(kind: .primary)).keyboardShortcut(.defaultAction)
                     .disabled(term.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
         }
@@ -328,6 +331,9 @@ struct DictionaryView: View {
         .background(Palette.surface, in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Palette.border, lineWidth: 1))
         .onHover { inside in hovered = inside ? entry.id : (hovered == entry.id ? nil : hovered) }
+        .contentShape(Rectangle())
+        .onTapGesture { term = entry.term; misheard = entry.misheard ?? ""; adding = true }
+        .help("點一下編輯詞彙")
     }
 }
 
