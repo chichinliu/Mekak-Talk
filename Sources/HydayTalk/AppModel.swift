@@ -37,6 +37,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var transcript = ""
     @Published private(set) var result = ""
     @Published var notice = ""
+    /// Set when the output had nowhere to go, so the panel stays up with a copy button.
+    @Published private(set) var missedInsertion = false
     @Published var showPermissionGuide = false
     @Published private(set) var requestingPermission: PermissionKind?
     private(set) var permissionGuideStartStep: PermissionKind?
@@ -264,7 +266,7 @@ final class AppModel: ObservableObject {
         sessionSettings = snapshot; self.action = action
         sessionHints = RecognitionHints.terms(dictionary: snapshot.dictionary, vocabulary: hydayVocabulary)
         let hints = sessionHints
-        result = ""; transcript = ""; notice = ""; elapsed = 0; level = 0
+        result = ""; transcript = ""; notice = ""; missedInsertion = false; elapsed = 0; level = 0
         destination = action == .hyday ? "Hyday"
             : (snapshot.autoInsert && action != .ask && (target?.editable != true || target?.element == nil)
                ? "剪貼簿" : (target?.name ?? "結果區"))
@@ -380,13 +382,14 @@ final class AppModel: ObservableObject {
                     do {
                         message = try await TextInsertion.insert(output, target: inputTarget)
                         if voiceAction == .dictate { watchCorrections(of: output, at: inputTarget, settings: snapshot) }
+                        delivered = true
                     } catch is CancellationError { throw CancellationError() }
                     catch {
                         try Task.checkCancellation(); guard sessionID == current else { return }
-                        TextInsertion.copy(output)
-                        message = "文字已複製，可直接貼上。"
+                        // Keep the panel up so the text can be copied by hand.
+                        missedInsertion = true
+                        message = error.localizedDescription
                     }
-                    delivered = true
                     notice = notice.isEmpty ? message : notice + " " + message
                 } else { notice = notice.isEmpty ? "文字已保留，可複製到需要的地方。" : notice }
                 try Task.checkCancellation(); guard sessionID == current else { return }

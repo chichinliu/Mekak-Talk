@@ -215,7 +215,7 @@ struct HomeView: View {
             SectionTitle("目前設定", symbol: "slider.horizontal.3")
             VStack(spacing: 2) {
                 HomeSettingButton(title: "語音辨識", value: speechModelName, symbol: model.settings.speechBackend.symbol, tint: Palette.action) { selectPage(.speech) }
-                HomeSettingButton(title: "文字整理", value: model.settings.textBackend == .local ? (model.settings.localTextModel ?? "未選擇模型") : model.settings.textBackend.title,
+                HomeSettingButton(title: "文字整理", value: textModelName,
                                   symbol: "text.alignleft", tint: Palette.ai) { selectPage(.text) }
             }
         }.equalHeightCard()
@@ -300,7 +300,19 @@ struct HomeView: View {
         if model.settings.speechBackend == .whisper {
             return LocalSpeechModel.all.first { model.settings.whisperModel.hasSuffix($0.filename) }?.title ?? "本機模型"
         }
+        if model.settings.speechBackend == .api { return apiTitle(model.settings.speechAPI.model) }
         return model.settings.speechBackend.title
+    }
+    private var textModelName: String {
+        switch model.settings.textBackend {
+        case .local: return model.settings.localTextModel ?? "未選擇模型"
+        case .api: return apiTitle(model.settings.textAPI.model)
+        default: return model.settings.textBackend.title
+        }
+    }
+    private func apiTitle(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty ? "API Key" : "API Key · \(trimmed)"
     }
     private func toggleRecording() { if model.phase == .recording { model.finish() } else { model.begin() } }
     private func copyPreview() { TextInsertion.copy(previewOutput); copiedPreview = true }

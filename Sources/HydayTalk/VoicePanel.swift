@@ -33,7 +33,7 @@ final class VoicePanel {
     func refresh() {
         if lastPhase != model.phase {
             lastPhase = model.phase
-            presentation.expanded = model.phase == .failed || (model.phase == .done && model.action == .ask)
+            presentation.expanded = model.phase == .failed || (model.phase == .done && (model.action == .ask || model.missedInsertion))
         }
         guard model.phase != .idle else { panel.orderOut(nil); return }
         let height = presentation.expanded ? LayoutToken.voiceDetailHeight : LayoutToken.voicePanelHeight
@@ -66,13 +66,15 @@ struct VoiceBarState {
     var notice = ""
     var action: VoiceAction = .dictate
     var destination = "結果區"
+    var missedInsertion = false
     var actionTitle: String { action.title }
 }
 
 extension VoiceBarState {
     @MainActor init(model: AppModel) {
         self.init(phase: model.phase, elapsed: model.elapsed, level: model.level, transcript: model.transcript,
-            result: model.result, notice: model.notice, action: model.action, destination: model.destination)
+            result: model.result, notice: model.notice, action: model.action, destination: model.destination,
+            missedInsertion: model.missedInsertion)
     }
 }
 
@@ -131,6 +133,7 @@ struct VoiceBarView: View {
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(compactTitle).font(Typography.font(.caption, weight: .semibold)).lineLimit(1)
+                        .fixedSize(horizontal: state.missedInsertion, vertical: false)
                         .help(state.notice.isEmpty ? compactTitle : state.notice)
                     // A Hyday entry is not inserted anywhere, so preview what was written.
                     if state.phase == .done, state.action == .hyday, !state.result.isEmpty {
@@ -142,7 +145,8 @@ struct VoiceBarView: View {
             }
             if state.phase == .recording {
                 control("stop.fill", label: "完成錄音 · fn", emphasized: true, action: actions.finish)
-            } else if terminal && !state.result.isEmpty {
+            } else if terminal && !state.result.isEmpty && !(expanded && state.missedInsertion) {
+                // When expanded after a missed insertion, the copy button below takes over.
                 control("doc.on.doc", label: "複製文字", emphasized: true, action: actions.copy)
             }
             if state.phase != .recording {
@@ -173,7 +177,9 @@ struct VoiceBarView: View {
             case .ask: return "回應中"
             case .hyday: return "寫入中"
             }
-        case .done: return state.action == .hyday ? "已記到 Hyday" : "已完成"
+        case .done:
+            if state.missedInsertion { return "沒有可插入的位置" }
+            return state.action == .hyday ? "已記到 Hyday" : "已完成"
         case .failed: return "處理失敗"
         }
     }
@@ -212,7 +218,12 @@ struct VoiceBarView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }.frame(maxHeight: .infinity)
             if terminal {
-                Button("開啟主視窗", action: actions.openMain).buttonStyle(AlignButtonStyle()).controlSize(.regular)
+                HStack(spacing: 8) {
+                    if state.missedInsertion, !state.result.isEmpty {
+                        Button("複製文字", action: actions.copy).buttonStyle(AlignButtonStyle(kind: .primary)).controlSize(.regular)
+                    }
+                    Button("開啟主視窗", action: actions.openMain).buttonStyle(AlignButtonStyle()).controlSize(.regular)
+                }
             } else {
                 Text("\(state.actionTitle) · \(state.destination)").foregroundStyle(Palette.muted)
                     .lineLimit(1).truncationMode(.middle).help("\(state.actionTitle) · \(state.destination)")
