@@ -107,8 +107,8 @@ typealias Typography = DesignTokens.Typography
 typealias IconToken = DesignTokens.Icons
 typealias LayoutToken = DesignTokens.Layout
 
-/// The Hyday Talk mark on its orange tile.
-struct HydayLogo: View {
+/// The Mekak Talk mark on its orange tile.
+struct MekakLogo: View {
     var size: CGFloat = 28
     var body: some View {
         Canvas { context, canvas in

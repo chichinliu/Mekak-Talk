@@ -76,7 +76,7 @@ final class TextTests: XCTestCase {
         XCTAssertEqual(TextProcessing.clean("api rapid C++", settings: settings), "API $1 \\ rapid C++")
     }
     func testMixedLanguageCounting() {
-        XCTAssertEqual(TextProcessing.wordCount("你好 Hyday Talk 2026!"), 5)
+        XCTAssertEqual(TextProcessing.wordCount("你好 Mekak Talk 2026!"), 5)
         XCTAssertEqual(TextProcessing.wordCount(""), 0)
     }
     func testArgumentsKeepPathsAndMetacharactersLiteral() throws {

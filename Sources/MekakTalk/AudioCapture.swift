@@ -23,8 +23,8 @@ final class AudioCapture {
         let root = FileManager.default.temporaryDirectory
         guard let folders = try? FileManager.default.contentsOfDirectory(at: root,
             includingPropertiesForKeys: [.isDirectoryKey, .isSymbolicLinkKey]) else { return }
-        for folder in folders where folder.lastPathComponent.hasPrefix("HydayTalk-") {
-            let parts = folder.lastPathComponent.dropFirst("HydayTalk-".count).split(separator: "-", maxSplits: 1)
+        for folder in folders where folder.lastPathComponent.hasPrefix("MekakTalk-") {
+            let parts = folder.lastPathComponent.dropFirst("MekakTalk-".count).split(separator: "-", maxSplits: 1)
             guard parts.count == 2, let processID = Int32(parts[0]), processID > 0,
                   UUID(uuidString: String(parts[1])) != nil,
                   let values = try? folder.resourceValues(forKeys: [.isDirectoryKey, .isSymbolicLinkKey]),
@@ -75,7 +75,7 @@ final class AudioCapture {
                 }
             }
         } else {
-            let folder = FileManager.default.temporaryDirectory.appendingPathComponent("HydayTalk-\(getpid())-" + UUID().uuidString, isDirectory: true)
+            let folder = FileManager.default.temporaryDirectory.appendingPathComponent("MekakTalk-\(getpid())-" + UUID().uuidString, isDirectory: true)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
             directory = folder
         }

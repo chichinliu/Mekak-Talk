@@ -1,4 +1,4 @@
-# Hyday Talk
+# Mekak Talk
 
 把說話轉成文字並插入其他 App 的 macOS 語音輸入工具
 

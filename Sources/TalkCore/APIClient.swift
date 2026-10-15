@@ -13,7 +13,7 @@ public enum APIClient {
     public static func transcription(audio: Data, settings: APISettings, key: String, language: String,
                                      dictionary: [String], session: URLSession = .shared) async throws -> String {
         guard !settings.model.trimmingCharacters(in: .whitespaces).isEmpty else { throw TalkError("請填入辨識模型名稱。") }
-        let boundary = "HydayTalk-" + UUID().uuidString
+        let boundary = "MekakTalk-" + UUID().uuidString
         var body = Data()
         func field(_ name: String, _ value: String) {
             body.append(Data("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".utf8))

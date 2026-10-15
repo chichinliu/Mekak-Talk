@@ -14,7 +14,7 @@ struct InputTarget {
 
 @MainActor
 enum TextInsertion {
-    private static let logger = Logger(subsystem: "tw.muki.hyday-talk", category: "TextInsertion")
+    private static let logger = Logger(subsystem: "com.chichinliu.mekak-talk", category: "TextInsertion")
     private static var previousExternalApplication: NSRunningApplication?
     private static var previousExternalElement: AXUIElement?
     private static var activationObserver: NSObjectProtocol?

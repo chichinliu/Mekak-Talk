@@ -73,10 +73,10 @@ final class ScreenContextTermTests: XCTestCase {
 
 final class ScreenContextLeakTests: XCTestCase {
     let context = ScreenContext(app: "Mail", windowTitle: "Re: 上線",
-        text: "許紘睿你好：\n請問 Hyday Talk 什麼時候可以上線？另外 Figma 的稿子我放在共用資料夾了。", cursor: 52)
+        text: "許紘睿你好：\n請問 Mekak Talk 什麼時候可以上線？另外 Figma 的稿子我放在共用資料夾了。", cursor: 52)
 
     func testCopiedContextIsALeak() {
-        XCTAssertTrue(context.leaked(into: "許紘睿你好：\n請問 Hyday Talk 什麼時候可以上線？\n紘睿你好，謝謝你的稿子。",
+        XCTAssertTrue(context.leaked(into: "許紘睿你好：\n請問 Mekak Talk 什麼時候可以上線？\n紘睿你好，謝謝你的稿子。",
                                      transcript: "宏瑞你好謝謝你的稿子"))
     }
 
@@ -86,7 +86,7 @@ final class ScreenContextLeakTests: XCTestCase {
     }
 
     func testTextTheUserAlsoSaidIsNotALeak() {
-        XCTAssertFalse(context.leaked(into: "Hyday Talk 什麼時候可以上線？",
-                                      transcript: "Hyday Talk什麼時候可以上線"))
+        XCTAssertFalse(context.leaked(into: "Mekak Talk 什麼時候可以上線？",
+                                      transcript: "Mekak Talk什麼時候可以上線"))
     }
 }

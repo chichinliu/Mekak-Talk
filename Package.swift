@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "HydayTalk",
+    name: "MekakTalk",
     platforms: [.macOS(.v14)],
-    products: [.executable(name: "HydayTalk", targets: ["HydayTalk"])],
+    products: [.executable(name: "MekakTalk", targets: ["MekakTalk"])],
     targets: [
         .target(name: "TalkCore"),
-        .executableTarget(name: "HydayTalk", dependencies: ["TalkCore"]),
+        .executableTarget(name: "MekakTalk", dependencies: ["TalkCore"]),
         .testTarget(name: "TalkCoreTests", dependencies: ["TalkCore"])
     ]
 )

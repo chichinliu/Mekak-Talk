@@ -16,11 +16,11 @@ Voxt 記住錄音開始時的目標 PID／bundle ID；若完成時自己的視�
 
 輸入走剪貼簿加 Cmd+V，使用 HID event source 與 annotated session event tap；它沒有在主要輸出流程直接設定 AXSelectedText。剪貼簿在 0.8 秒後還原，期間使用者或其他工具變更剪貼簿時不還原；另外有 output generation 與 transaction 檢查，避免取消或新錄音後仍送出舊結果。
 
-Voxt 的焦點解析有 App、視窗、系統層級與子元素的備援，實作也包含可編輯性檢查，但 Hyday Talk 保留更嚴格的原輸入框、游標與選取文字檢查，避免結果插入使用者新切換的位置。
+Voxt 的焦點解析有 App、視窗、系統層級與子元素的備援，實作也包含可編輯性檢查，但 Mekak Talk 保留更嚴格的原輸入框、游標與選取文字檢查，避免結果插入使用者新切換的位置。
 
 來源：[文字輸出](https://github.com/hehehai/voxt/blob/baa6f316a6648cc0ef90c70d724acd10085eedaa/Voxt/App/TextOutputDelivery.swift)、[焦點解析](https://github.com/hehehai/voxt/blob/baa6f316a6648cc0ef90c70d724acd10085eedaa/Voxt/App/TextInputIO.swift)。
 
-## 本次在 Hyday Talk 套用的調整
+## 本次在 Mekak Talk 套用的調整
 
 - 統一使用 Cmd+V，使終端機／網頁編輯器接收正常貼上事件，並保留焦點、游標、密碼欄位與取消檢查。
 - 加入同 PID 的系統焦點備援與 AX 參照保存，僅在開始錄音時讀取選取文字。

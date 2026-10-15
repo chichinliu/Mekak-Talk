@@ -6,7 +6,7 @@ public struct AppUpdate: Equatable, Sendable {
     public let dmg: URL
     public let page: URL
 
-    public static let latestReleaseURL = URL(string: "https://api.github.com/repos/mukiwu/hyday-talk/releases/latest")!
+    public static let latestReleaseURL = URL(string: "https://api.github.com/repos/chichinliu/hyday-talk/releases/latest")!
 
     /// Reads GitHub's latest-release JSON; nil unless it is newer than `current` and carries a DMG.
     public static func parse(_ data: Data, current: String) -> AppUpdate? {

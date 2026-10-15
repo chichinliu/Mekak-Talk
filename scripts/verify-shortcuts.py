@@ -12,7 +12,7 @@ parser.add_argument("--log", type=Path)
 args = parser.parse_args()
 work = root / ".build/shortcuts"
 work.mkdir(parents=True, exist_ok=True)
-source = (root / "Sources/HydayTalk/GlobalShortcuts.swift").read_text()
+source = (root / "Sources/MekakTalk/GlobalShortcuts.swift").read_text()
 # Reproduce a session key-state snapshot lagging behind the incoming event.
 # The event's own flags are preserved; no real keys, audio or permissions change.
 source = source.replace("CGEventSource.keyState(.combinedSessionState, key: 56)", "false")

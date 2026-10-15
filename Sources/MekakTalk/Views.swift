@@ -104,8 +104,8 @@ struct MainView: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 22) {
             HStack(spacing: 9) {
-                HydayLogo(size: 28)
-                Text("Hyday Talk").font(Typography.font(.section, weight: .semibold)).fixedSize()
+                MekakLogo(size: 28)
+                Text("Mekak Talk").font(Typography.font(.section, weight: .semibold)).fixedSize()
             }.padding(.horizontal, 8).padding(.top, 10)
             VStack(alignment: .leading, spacing: 4) {
                 ForEach([Page.home, .insights, .history]) { item in navigationItem(item) }
@@ -615,7 +615,7 @@ private struct SidebarJobs: View {
                 }
             }
         case .ready:
-            job(symbol: "checkmark.circle", title: "\(update.version) 已下載", detail: "結束 Hyday Talk 後，把新版拖進應用程式資料夾") {
+            job(symbol: "checkmark.circle", title: "\(update.version) 已下載", detail: "結束 Mekak Talk 後，把新版拖進應用程式資料夾") {
                 Button("打開安裝檔", action: updater.openInstaller).buttonStyle(AlignButtonStyle(kind: .primary)).controlSize(.small)
             }
         case .failed(let message):

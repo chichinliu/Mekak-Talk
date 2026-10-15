@@ -1,10 +1,10 @@
-# Hyday Talk
+# Mekak Talk
 
-Hyday Talk 是一款原生 macOS 語音輸入工具，使用者在任何 App 中按下 fn 即可開始說話，再按一次 fn 完成，辨識並整理後的文字會插入原本的游標位置
+Mekak Talk 是一款原生 macOS 語音輸入工具，使用者在任何 App 中按下 fn 即可開始說話，再按一次 fn 完成，辨識並整理後的文字會插入原本的游標位置
 
-Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需上傳
+Mekak Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需上傳
 
-![Hyday Talk 總覽畫面](docs/images/screenshot.png)
+![Mekak Talk 總覽畫面](docs/images/screenshot.png)
 
 ## 主要功能
 
@@ -25,9 +25,9 @@ Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 
 ## 安裝
 
-1. 至 [Releases](https://github.com/mukiwu/hyday-talk/releases) 下載最新版本的 `Hyday-Talk-<版本>.dmg`
-2. 開啟 DMG，將 Hyday Talk 拖曳至應用程式資料夾
-3. 從應用程式資料夾開啟 Hyday Talk
+1. 至 [Releases](https://github.com/chichinliu/hyday-talk/releases) 下載最新版本的 `Mekak-Talk-<版本>.dmg`
+2. 開啟 DMG，將 Mekak Talk 拖曳至應用程式資料夾
+3. 從應用程式資料夾開啟 Mekak Talk
 
 ## 初次設定
 
@@ -41,7 +41,7 @@ Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 
 之後可從側欄底部的權限指引重新開啟
 
-若輔助使用開關已開啟，App 仍顯示未授權，通常是系統保留了舊版本的簽章授權，請至系統設定的隱私權與安全性，於輔助使用清單移除舊的 Hyday Talk，重新加入應用程式資料夾中的 Hyday Talk 並開啟，再返回 App 按下重新檢查，詳細說明請參閱 [Apple TN3127](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements)
+若輔助使用開關已開啟，App 仍顯示未授權，通常是系統保留了舊版本的簽章授權，請至系統設定的隱私權與安全性，於輔助使用清單移除舊的 Mekak Talk，重新加入應用程式資料夾中的 Mekak Talk 並開啟，再返回 App 按下重新檢查，詳細說明請參閱 [Apple TN3127](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements)
 
 ## 快捷鍵
 
@@ -118,7 +118,7 @@ API 來源需支援 `POST /audio/transcriptions` 並回傳含 `text` 欄位的 J
 
 ## 隱私與資料儲存
 
-- 設定、聽寫紀錄（最多 200 筆）與使用統計存放於 `~/Library/Application Support/HydayTalk/`，不使用雲端同步
+- 設定、聽寫紀錄（最多 200 筆）與使用統計存放於 `~/Library/Application Support/MekakTalk/`，不使用雲端同步
 - API Key 存放於 macOS 鑰匙圈，不寫入設定檔
 - 系統辨識不寫入音訊檔；其他來源的暫存音訊於完成或取消後刪除，下次啟動時亦會清理殘留檔案
 - 插入文字時透過剪貼簿送出貼上指令，並於 0.8 秒後還原原本的剪貼簿內容
@@ -132,9 +132,3 @@ API 來源需支援 `POST /audio/transcriptions` 並回傳含 `text` 欄位的 J
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
 - [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp)
 - [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR)
-
-## 贊助
-
-如果這個專案對你有幫助，歡迎贊助支持我持續開發
-
-<a href="https://sponsor.muki.tw"><img src="https://sponsor.muki.tw/badge/sponsor-button.png" alt="贊助 MUKI" width="240"></a>

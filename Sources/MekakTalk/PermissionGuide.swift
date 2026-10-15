@@ -22,7 +22,7 @@ enum PermissionKind: String, Identifiable {
     }
     var purpose: String {
         switch self {
-        case .microphone: return "允許 Hyday Talk 透過麥克風錄製語音。"
+        case .microphone: return "允許 Mekak Talk 透過麥克風錄製語音。"
         case .speech: return "允許 macOS 將語音辨識為文字，僅系統辨識需要此權限。"
         case .accessibility: return "允許在其他 App 使用 fn 快捷鍵，並將文字輸入目前的文字框。"
         }
@@ -68,7 +68,7 @@ struct PermissionGuideView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 14) {
-                HydayLogo(size: 44)
+                MekakLogo(size: 44)
                 VStack(alignment: .leading, spacing: 5) {
                     Text("權限設定")
                         .font(Typography.font(.title, weight: .medium)).singleLineHeading()
@@ -144,7 +144,7 @@ struct PermissionGuideView: View {
                             Button("開啟\(selected.title)設定") { model.openPrivacy(selected.privacyPane) }
                                 .buttonStyle(AlignButtonStyle()).controlSize(.large)
                         }
-                        Text("返回 Hyday Talk 後會自動檢查；也可以按「重新檢查」。")
+                        Text("返回 Mekak Talk 後會自動檢查；也可以按「重新檢查」。")
                             .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
                         Divider()
                         DisclosureGroup(isExpanded: $showTroubleshooting) {
@@ -164,7 +164,7 @@ struct PermissionGuideView: View {
                                 }.foregroundStyle(Palette.action).padding(16).frame(maxWidth: .infinity, alignment: .leading)
                                     .background(Palette.actionSurface, in: RoundedRectangle(cornerRadius: 12))
                             } else {
-                                Label("權限已開啟，但 fn 尚未就緒。請完全結束 Hyday Talk，再重新開啟。", systemImage: "exclamationmark.circle")
+                                Label("權限已開啟，但 fn 尚未就緒。請完全結束 Mekak Talk，再重新開啟。", systemImage: "exclamationmark.circle")
                                     .font(Typography.font(.caption)).foregroundStyle(Palette.ink).lineSpacing(Typography.paragraphSpacing)
                             }
                         }
@@ -215,15 +215,15 @@ struct PermissionGuideView: View {
         VStack(alignment: .leading, spacing: 0) {
             if selected == .accessibility {
                 instruction(1, "按「前往開啟輔助使用」，進入系統設定。")
-                instruction(2, "在「隱私權與安全性 → 輔助使用」找到 Hyday Talk，將旁邊的開關打開。")
-                instruction(3, "若 macOS 要求驗證，請使用 Touch ID 或登入密碼，完成後返回 Hyday Talk。")
+                instruction(2, "在「隱私權與安全性 → 輔助使用」找到 Mekak Talk，將旁邊的開關打開。")
+                instruction(3, "若 macOS 要求驗證，請使用 Touch ID 或登入密碼，完成後返回 Mekak Talk。")
             } else if status == .denied || status == .granted || status == .restricted {
                 instruction(1, "按「開啟\(selected.title)設定」，進入系統設定。")
-                instruction(2, "在「隱私權與安全性 → \(selected.title)」找到 Hyday Talk，打開旁邊的開關。")
-                instruction(3, "回到 Hyday Talk，確認這一步顯示「已開啟」。")
+                instruction(2, "在「隱私權與安全性 → \(selected.title)」找到 Mekak Talk，打開旁邊的開關。")
+                instruction(3, "回到 Mekak Talk，確認這一步顯示「已開啟」。")
             } else {
                 instruction(1, "按下方的「允許\(selected.title)」。")
-                instruction(2, "macOS 出現 Hyday Talk 的授權視窗時，選擇「允許」。")
+                instruction(2, "macOS 出現 Mekak Talk 的授權視窗時，選擇「允許」。")
                 instruction(3, "看到「已開啟」後，按「下一步」。")
             }
         }.padding(.horizontal, 16).padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
@@ -233,8 +233,8 @@ struct PermissionGuideView: View {
     @ViewBuilder private var troubleshooting: some View {
         VStack(alignment: .leading, spacing: 12) {
             if selected == .accessibility {
-                Text("若清單沒有 Hyday Talk，請按「＋」加入目前的 App 並開啟授權。")
-                Button("在 Finder 顯示 Hyday Talk") { NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL]) }
+                Text("若清單沒有 Mekak Talk，請按「＋」加入目前的 App 並開啟授權。")
+                Button("在 Finder 顯示 Mekak Talk") { NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL]) }
                     .buttonStyle(AlignButtonStyle())
                 Text("可在選擇 App 的視窗按 ⌘⇧G，再貼上下方路徑。")
                 HStack {
@@ -242,11 +242,11 @@ struct PermissionGuideView: View {
                     Spacer(minLength: 0)
                     Button("複製路徑") { TextInsertion.copy(Bundle.main.bundleURL.path) }.buttonStyle(AlignButtonStyle()).controlSize(.regular)
                 }.padding(10).background(Palette.surface, in: RoundedRectangle(cornerRadius: 10))
-                Text("若系統開關已開啟但仍未授權，請移除舊項目，再加入上述路徑的 Hyday Talk 並開啟。")
-                Text("設定後返回 Hyday Talk 並按「重新檢查」，若仍未生效，請按「稍後設定」後完全結束 App，再重新開啟。")
+                Text("若系統開關已開啟但仍未授權，請移除舊項目，再加入上述路徑的 Mekak Talk 並開啟。")
+                Text("設定後返回 Mekak Talk 並按「重新檢查」，若仍未生效，請按「稍後設定」後完全結束 App，再重新開啟。")
             } else {
-                Text("如果之前按過「不允許」，macOS 通常不會再次跳出授權視窗。按「開啟\(selected.title)設定」，手動開啟 Hyday Talk。")
-                Text("如果清單沒有 Hyday Talk，先回到這一步按「允許\(selected.title)」，讓 App 向 macOS 請求授權，再檢查清單。")
+                Text("如果之前按過「不允許」，macOS 通常不會再次跳出授權視窗。按「開啟\(selected.title)設定」，手動開啟 Mekak Talk。")
+                Text("如果清單沒有 Mekak Talk，先回到這一步按「允許\(selected.title)」，讓 App 向 macOS 請求授權，再檢查清單。")
             }
             Text("macOS 若要求結束並重新開啟 App，請照提示操作。重新開啟後，可從「一般設定 → 查看設定指引」繼續。")
         }.font(Typography.font(.caption)).foregroundStyle(Palette.muted).lineSpacing(Typography.paragraphSpacing)

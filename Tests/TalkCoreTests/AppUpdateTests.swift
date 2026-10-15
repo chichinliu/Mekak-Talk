@@ -2,7 +2,7 @@ import XCTest
 @testable import TalkCore
 
 final class AppUpdateTests: XCTestCase {
-    private func release(_ tag: String, assets: String = #"[{"name":"Hyday-Talk-0.1.4.dmg","browser_download_url":"https://example.com/a.dmg"}]"#,
+    private func release(_ tag: String, assets: String = #"[{"name":"Mekak-Talk-0.1.4.dmg","browser_download_url":"https://example.com/a.dmg"}]"#,
                          prerelease: Bool = false) -> Data {
         Data(#"{"tag_name":"\#(tag)","html_url":"https://example.com/r","draft":false,"prerelease":\#(prerelease),"assets":\#(assets)}"#.utf8)
     }

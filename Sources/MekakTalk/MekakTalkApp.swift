@@ -3,25 +3,25 @@ import AppKit
 import TalkCore
 
 @main
-struct HydayTalkApp: App {
+struct MekakTalkApp: App {
     @NSApplicationDelegateAdaptor(TalkAppDelegate.self) private var delegate
     @ObservedObject private var model = AppModel.shared
     var body: some Scene {
-        Window("Hyday Talk", id: "main") {
+        Window("Mekak Talk", id: "main") {
             MainWindowContent(model: model)
         }.defaultSize(width: 1060, height: 780).windowResizability(.contentMinSize)
             .commands {
                 CommandGroup(replacing: .newItem) {}
                 AboutCommands()
             }
-        Window("關於 Hyday Talk", id: "about") {
+        Window("關於 Mekak Talk", id: "about") {
             AboutView()
         }.windowResizability(.contentSize)
         MenuBarExtra {
             MenuContent(model: model).font(Typography.font(.body))
         } label: {
             Image(systemName: model.phase == .recording ? "mic.fill" : "waveform")
-                .accessibilityLabel(model.phase == .recording ? "Hyday Talk 正在錄音" : "Hyday Talk")
+                .accessibilityLabel(model.phase == .recording ? "Mekak Talk 正在錄音" : "Mekak Talk")
         }
     }
 }
@@ -30,7 +30,7 @@ private struct AboutCommands: Commands {
     @Environment(\.openWindow) private var openWindow
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
-            Button("關於 Hyday Talk") { openWindow(id: "about") }
+            Button("關於 Mekak Talk") { openWindow(id: "about") }
         }
     }
 }
@@ -39,8 +39,8 @@ private struct AboutView: View {
     private var version: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.1.0" }
     var body: some View {
         VStack(spacing: 16) {
-            HydayLogo(size: 64)
-            Text("Hyday Talk").font(Typography.font(.title, weight: .semibold)).singleLineHeading()
+            MekakLogo(size: 64)
+            Text("Mekak Talk").font(Typography.font(.title, weight: .semibold)).singleLineHeading()
             Text("支援聽寫、翻譯與文字提問。").font(Typography.font(.body))
             Text("版本 \(version) · macOS 原生版").font(Typography.font(.caption)).foregroundStyle(Palette.muted)
         }.padding(32).frame(width: 400, height: 260).background(Palette.canvas)
@@ -72,10 +72,10 @@ private struct MenuContent: View {
         if model.phase.busy { Button("取消 · esc") { model.cancel() } }
         if !model.result.isEmpty { Button("複製最近結果") { model.copyResult() } }
         Divider()
-        Button("開啟 Hyday Talk") { openWindow(id: "main"); NSApp.activate(ignoringOtherApps: true) }
+        Button("開啟 Mekak Talk") { openWindow(id: "main"); NSApp.activate(ignoringOtherApps: true) }
         Text("辨識：\(model.settings.speechBackend.title)")
         Divider()
-        Button("結束 Hyday Talk") { NSApp.terminate(nil) }.keyboardShortcut("q")
+        Button("結束 Mekak Talk") { NSApp.terminate(nil) }.keyboardShortcut("q")
     }
 }
 

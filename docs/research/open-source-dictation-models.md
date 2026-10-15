@@ -19,7 +19,7 @@ Whispering 常見於舊比較文章，但目前 [官方 main README](https://git
 
 Handy 的現行條目是 `handy-computer/Breeze-ASR-25-gguf`，模型 revision 為 `1e5e8d7295110e1e14e305e9cf7411d82711beaa`；預設量化檔 `Breeze-ASR-25-Q5_K_M.gguf`，**1,160,366,080 bytes，約 1.16 GB**。目錄明列上游為 Breeze ASR 25、語言 `zh`／`en`。[Handy 模型目錄](https://github.com/cjpais/Handy/blob/7b2a28a30aa24174292ddd7f4e92e12e6e3bd501/src-tauri/src/catalog/catalog.json#L2108)；[Handy 轉檔模型卡及 transcribe-cli 使用方式](https://huggingface.co/handy-computer/Breeze-ASR-25-gguf)
 
-這個 **GGUF 供 transcribe.cpp 使用，不能直接交給目前 Hyday Talk 的 whisper-cli GGML 路徑**。whisper.cpp 載入器要求 GGML 檔頭；其官方轉換程式可將 Hugging Face 的 Whisper 微調模型轉成 GGML。因此 Breeze 的模型架構可以沿用 Whisper 家族，但必須取得或自行產生正確的 GGML `.bin`。[whisper.cpp 載入器](https://github.com/ggml-org/whisper.cpp/blob/master/src/whisper.cpp#L1497)；[官方微調模型轉換程式](https://github.com/ggml-org/whisper.cpp/blob/master/models/convert-h5-to-ggml.py)
+這個 **GGUF 供 transcribe.cpp 使用，不能直接交給目前 Mekak Talk 的 whisper-cli GGML 路徑**。whisper.cpp 載入器要求 GGML 檔頭；其官方轉換程式可將 Hugging Face 的 Whisper 微調模型轉成 GGML。因此 Breeze 的模型架構可以沿用 Whisper 家族，但必須取得或自行產生正確的 GGML `.bin`。[whisper.cpp 載入器](https://github.com/ggml-org/whisper.cpp/blob/master/src/whisper.cpp#L1497)；[官方微調模型轉換程式](https://github.com/ggml-org/whisper.cpp/blob/master/models/convert-h5-to-ggml.py)
 
 Handy 還保留 `breeze-asr-q5_k.bin`、`size_mb: 1030` 的舊條目，但程式說明舊 URL 型模型在未下載時由 UI 隱藏，已下載者繼續可用。它不是現在應優先描述的下載路徑。[舊條目](https://github.com/cjpais/Handy/blob/7b2a28a30aa24174292ddd7f4e92e12e6e3bd501/src-tauri/src/managers/model.rs#L710)；[新舊目錄處理](https://github.com/cjpais/Handy/blob/7b2a28a30aa24174292ddd7f4e92e12e6e3bd501/src-tauri/src/managers/model.rs#L1204)
 
@@ -33,7 +33,7 @@ Handy 還保留 `breeze-asr-q5_k.bin`、`size_mb: 1030` 的舊條目，但程式
 
 SenseVoice Small 官方支援國語、粵語、英文、日文、韓文，是另一個中文候選；它的模型權重使用另列的 FunASR 模型授權，不應因 App 使用 MIT 就推定模型也是 MIT。這份調查不把它列為「台灣繁中已驗證」模型。[SenseVoice 官方模型卡](https://huggingface.co/FunAudioLLM/SenseVoiceSmall)
 
-## Hyday Talk 的實際選擇
+## Mekak Talk 的實際選擇
 
 先保留現有 whisper.cpp 接口，以多語 `small` 或 `large-v3-turbo` 建立基準；把 **Breeze ASR 25 的正確 GGML 轉檔**列為台灣國語／中英混說的優先對照候選。這是根據語言支援、官方訓練定位及現有架構的選擇，不代表已證實它對使用者的錄音最準。[Whisper 官方模型說明](https://github.com/openai/whisper#available-models-and-languages)；[Breeze 官方模型卡](https://huggingface.co/MediaTek-Research/Breeze-ASR-25)
 
@@ -77,9 +77,9 @@ VoiceInk、OpenWhispr、open-wispr 仍以 Whisper 為主，中文沒有特別處
 
 限制：支援的方言清單沒有台灣國語，官方也未說明會輸出繁體字，App 仍沿用既有的簡轉繁處理
 
-### Hyday Talk 的實作
+### Mekak Talk 的實作
 
 - 以 transcribe.cpp 執行 Qwen3-ASR，固定於 commit `f1dcd15858c4bbba87ca97862b4e448b2cf15b8f`，靜態連結後與 whisper-cli 一起內嵌於 App
 - 模型取自 [handy-computer 的 Qwen3-ASR 0.6B GGUF](https://huggingface.co/handy-computer/Qwen3-ASR-0.6B-gguf) 與 [1.7B GGUF](https://huggingface.co/handy-computer/Qwen3-ASR-1.7B-gguf)，提供 0.6B Q8_0（約 850 MB）與 1.7B Q6_K（約 1.69 GB），下載後驗證 SHA-256
-- 個人詞典與 Hyday 詞彙以 `--vocabulary` 傳給模型
+- 個人詞典以 `--vocabulary` 傳給模型
 - 本機以 macOS 台灣中文合成語音試跑 0.6B，載入後每段 5 至 8 秒的錄音約 0.2 至 0.3 秒完成，第一次載入約 5 秒；合成語音過於標準，無法反映真人快速說話時的差異，實際準確度仍需使用者以日常聽寫比較

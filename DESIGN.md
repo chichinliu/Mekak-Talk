@@ -1,5 +1,5 @@
 ---
-name: Hyday Talk
+name: Mekak Talk
 description: 原生 macOS 語音輸入工作區，淺灰工作區、柔和卡片與細字重數據
 colors:
   workspace: "#F2F2F2"
@@ -107,7 +107,7 @@ components:
     padding: "5pt 10pt"
 ---
 
-# Design System: Hyday Talk
+# Design System: Mekak Talk
 
 ## Overview
 
@@ -117,7 +117,7 @@ components:
 
 數字用細字重的大字，標題用中等字重，層次靠字級與灰階拉開，不靠粗體。顏色只用在有意義的數字與圖形，不做裝飾
 
-來源檔案為 Sources/HydayTalk 下的 DesignTokens.swift、AlignComponents.swift、Views.swift、HomeComponents.swift、InsightsViews.swift、SettingsViews.swift、PermissionGuide.swift、VoicePanel.swift；產品能力以 PRODUCT.md 為準
+來源檔案為 Sources/MekakTalk 下的 DesignTokens.swift、AlignComponents.swift、Views.swift、HomeComponents.swift、InsightsViews.swift、SettingsViews.swift、PermissionGuide.swift、VoicePanel.swift；產品能力以 PRODUCT.md 為準
 
 **Key Characteristics:**
 - 原生 SwiftUI 與 macOS 控制行為

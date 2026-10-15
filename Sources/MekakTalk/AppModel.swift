@@ -79,7 +79,7 @@ final class AppModel: ObservableObject {
         do {
             settings = try store.load(TalkSettings.self, from: "settings.json") ?? TalkSettings()
             settings.dictationLayout = nil // 段落與列表改由自動整理混合排版
-        } catch { notice = "無法讀取本機設定，原檔案已備份。請檢查 Application Support/HydayTalk。" }
+        } catch { notice = "無法讀取本機設定，原檔案已備份。請檢查 Application Support/MekakTalk。" }
         do {
             history = try store.load([DictationRecord].self, from: "history.json") ?? []
         } catch { notice += " 無法讀取本機紀錄，原檔案已保留或備份。" }

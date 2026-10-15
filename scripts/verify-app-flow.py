@@ -12,7 +12,7 @@ parser.add_argument("--log", type=Path)
 args = parser.parse_args()
 work = root / ".build/app-flow"
 work.mkdir(parents=True, exist_ok=True)
-source = (root / "Sources/HydayTalk/AppModel.swift").read_text()
+source = (root / "Sources/MekakTalk/AppModel.swift").read_text()
 # Only the OS permission boundary is overridden in this disposable source copy.
 # Recording, processing, clipboard fallback, cancellation and state transitions
 # remain the actual AppModel implementation.
