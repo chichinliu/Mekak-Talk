@@ -114,8 +114,12 @@ enum TextInsertion {
             }
         }
         try Task.checkCancellation()
+        // Electron apps such as HyperFrames can report no focused element for
+        // seconds while the caret is still in the field; then ask the field itself.
+        var current = focusedElement(pid: target.pid)
+        if current == nil, attribute(element, kAXFocusedAttribute) as? Bool == true { current = element }
         guard NSWorkspace.shared.frontmostApplication?.processIdentifier == target.pid,
-              let current = focusedElement(pid: target.pid), CFEqual(element, current) else {
+              let current, CFEqual(element, current) else {
             throw TalkError("你已切換輸入位置，文字已保留供複製。")
         }
         if let before = target.selectionRange, let after = range(current),
