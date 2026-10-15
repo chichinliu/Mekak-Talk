@@ -172,13 +172,22 @@ struct HomeView: View {
     @State private var resultExpanded = false
     @State private var resultOverflows = false
     @State private var homeWidth: CGFloat = 1000
-    private var previewInput: String { "明天先確認權限再測試錄音最後檢查文字插入" }
+    private var previewInput: String { "呃明天先確認權限，然後再測試錄音，唉最後還要檢查文字插入這樣" }
     private var previewOutput: String {
         guard model.settings.requiresTextModel(for: .dictate), model.settings.textBackend != .basic else { return previewInput }
-        let text = model.settings.writingStyle == .professional
-            ? "請於明天確認權限、測試錄音並檢查文字插入。"
-            : "明天先確認權限，再測試錄音，最後檢查文字插入。"
-        return text
+        switch model.settings.writingStyle {
+        case .verbatim: return previewInput
+        case .natural: return "明天先確認權限，再測試錄音，唉，最後還要檢查文字插入。"
+        case .professional: return "明天確認權限、測試錄音，並檢查文字插入。"
+        }
+    }
+    /// One line on what the selected style keeps and drops.
+    private var styleNote: String {
+        switch model.settings.writingStyle {
+        case .verbatim: return "保留原話會照辨識結果輸出，不刪任何字，也跳過 AI 整理與排版。"
+        case .natural: return "自然會刪掉呃、然後這類沒有意思的詞，但保留你的用詞和唉、好啦這類帶情緒的語氣。"
+        case .professional: return "正式會刪掉所有語助詞和口頭禪，並改成簡潔的書面用語。"
+        }
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -337,12 +346,13 @@ struct HomeView: View {
                 if model.settings.textBackend == .basic {
                     Text("風格需要文字 AI，可從下方「文字整理」啟用。")
                         .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
-                } else if model.settings.writingStyle == .verbatim {
-                    Text("保留原話會跳過 AI 整理與排版。")
-                        .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
                 }
             }
             HomeOutputComparison(input: previewInput, output: previewOutput)
+            if model.settings.textBackend != .basic {
+                Text(styleNote).font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }.frame(maxHeight: .infinity, alignment: .topLeading).surface()
     }
     private var speechModelName: String {
