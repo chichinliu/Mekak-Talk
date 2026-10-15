@@ -25,7 +25,7 @@ Mekak Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 
 ## 安裝
 
-1. 至 [Releases](https://github.com/chichinliu/hyday-talk/releases) 下載最新版本的 `Mekak-Talk-<版本>.dmg`
+1. 至 [Releases](https://github.com/chichinliu/Mekak-Talk/releases) 下載最新版本的 `Mekak-Talk-<版本>.dmg`
 2. 開啟 DMG，將 Mekak Talk 拖曳至應用程式資料夾
 3. 從應用程式資料夾開啟 Mekak Talk
 
