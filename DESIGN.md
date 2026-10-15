@@ -16,10 +16,10 @@ colors:
   accent-ink: "#163A7A"
   accent-surface: "#E8EEF8"
   accent-border: "#C5D3EC"
-  action: "#2E6BF0"
-  action-ink: "#2453C2"
-  action-surface: "#EEF3FF"
-  action-border: "#D9E4FD"
+  action: "#0A8794"
+  action-ink: "#076571"
+  action-surface: "#E3F4F5"
+  action-border: "#BCE3E6"
   ai: "#7A5AF8"
   ai-surface: "#F3F0FF"
   success: "#1F9D62"
@@ -140,7 +140,7 @@ components:
 
 ### Semantic
 - **品牌藍（accent）**：品牌標記、開始聽寫按鈕、錄音音量、使用時段熱度
-- **操作藍（action）**：選取、主要按鈕、開關、圖表的目前值
+- **操作青（action）**：選取、主要按鈕、開關、圖表的目前值
 - **紫色（ai）**：文字 AI 相關，例如提問比例
 - **綠色（success）**：就緒、節省時間、增加的比較
 - **黃色（warning）**：待設定
@@ -193,7 +193,7 @@ components:
 ## Components
 
 ### Buttons
-- **Primary**：藍底白字，上緣淡淡亮光，hover 變深
+- **Primary**：青底白字，上緣淡淡亮光，hover 變深
 - **Accent**：藍底白字，只用在開始聽寫，文字一般字重
 - **Secondary**：淡灰底，無框線，hover 稍深
 - **Ghost**：透明底，hover 淡灰
@@ -204,8 +204,8 @@ components:
 同一張卡片內多欄，細線分隔；每欄為灰色小標、細字重大數字、下方一行說明或白色比較膠囊（綠色上三角表示增加，紅色下三角表示減少）
 
 ### Charts
-- 長條：過去為淡藍斜線紋，目前為實色藍，上方放白色數值膠囊
-- 折線：藍色線與點，下方淡藍漸層，格線為淡灰虛線，最新一點加白色標籤
+- 長條：過去為淡青斜線紋，目前為實色青，上方放白色數值膠囊
+- 折線：青色線與點，下方淡青漸層，格線為淡灰虛線，最新一點加白色標籤
 - 熱度格：顏色越深代表越多，附較少與較多圖例
 - 點陣：每點一筆，平均值用金色虛線標示
 - 每張圖都提供無障礙的數值說明

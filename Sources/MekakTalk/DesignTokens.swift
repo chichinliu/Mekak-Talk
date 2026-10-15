@@ -12,10 +12,10 @@ enum DesignTokens {
         static let accentInk = Color(.sRGB, red: 22 / 255, green: 58 / 255, blue: 122 / 255) // #163A7A
         static let accentSurface = Color(.sRGB, red: 232 / 255, green: 238 / 255, blue: 248 / 255) // #E8EEF8
         static let accentBorder = Color(.sRGB, red: 197 / 255, green: 211 / 255, blue: 236 / 255) // #C5D3EC
-        static let action = Color(.sRGB, red: 46 / 255, green: 107 / 255, blue: 240 / 255) // #2E6BF0
-        static let actionInk = Color(.sRGB, red: 36 / 255, green: 83 / 255, blue: 194 / 255) // #2453C2
-        static let actionSurface = Color(.sRGB, red: 238 / 255, green: 243 / 255, blue: 255 / 255) // #EEF3FF
-        static let actionBorder = Color(.sRGB, red: 217 / 255, green: 228 / 255, blue: 253 / 255) // #D9E4FD
+        static let action = Color(.sRGB, red: 10 / 255, green: 135 / 255, blue: 148 / 255) // #0A8794
+        static let actionInk = Color(.sRGB, red: 7 / 255, green: 101 / 255, blue: 113 / 255) // #076571
+        static let actionSurface = Color(.sRGB, red: 227 / 255, green: 244 / 255, blue: 245 / 255) // #E3F4F5
+        static let actionBorder = Color(.sRGB, red: 188 / 255, green: 227 / 255, blue: 230 / 255) // #BCE3E6
         static let ai = Color(.sRGB, red: 122 / 255, green: 90 / 255, blue: 248 / 255) // #7A5AF8
         static let aiSurface = Color(.sRGB, red: 243 / 255, green: 240 / 255, blue: 255 / 255) // #F3F0FF
         static let ink = Color(.sRGB, red: 17 / 255, green: 28 / 255, blue: 52 / 255) // #111C34
