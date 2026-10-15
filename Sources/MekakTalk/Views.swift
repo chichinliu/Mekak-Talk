@@ -5,7 +5,7 @@ import TalkCore
 
 /*
 THESIS: A native dictation workspace makes fn, output and configuration immediately legible.
-OWN-WORLD: Light gray workspace, soft cards, teal voice details,
+OWN-WORLD: Light gray workspace, soft cards, blue voice details,
 precise native controls and SF Symbols.
 STORY: Check readiness, configure speech and text, then dictate at the destination cursor.
 FIRST VIEWPORT: Persistent sidebar, compact page heading, white dictation and output cards,
@@ -266,7 +266,7 @@ struct HomeView: View {
                 .disabled(model.phase.busy && model.phase != .recording)
                 .help(model.settings.autoInsert ? "完成後插入原輸入框，無法插入時自動複製文字。" : "開始聽寫，結果保留供複製。")
         }.padding(.horizontal, DesignTokens.Surfaces.padding).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 96)
-            // The one card framed by its own teal border instead of the shared white shell.
+            // The one card framed by its own blue border instead of the shared white shell.
             .background(LinearGradient(colors: [Palette.accentSurface, Palette.card], startPoint: .leading, endPoint: .trailing),
                         in: RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius))
             .overlay(RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius).strokeBorder(Palette.accentBorder, lineWidth: 1))

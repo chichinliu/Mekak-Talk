@@ -4,21 +4,21 @@ enum DesignTokens {
     enum Colors {
         static let voiceSurface = Color(.sRGB, red: 244 / 255, green: 245 / 255, blue: 247 / 255) // #F4F5F7
         static let canvas = Color(.sRGB, red: 254 / 255, green: 254 / 255, blue: 254 / 255) // #FEFEFE
-        static let workspace = Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255) // #F2F2F2
-        static let sidebar = Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255) // #F2F2F2
+        static let workspace = Color(.sRGB, red: 243 / 255, green: 245 / 255, blue: 249 / 255) // #F3F5F9
+        static let sidebar = Color(.sRGB, red: 243 / 255, green: 245 / 255, blue: 249 / 255) // #F3F5F9
         static let card = Color(.sRGB, red: 252 / 255, green: 252 / 255, blue: 252 / 255) // #FCFCFC
         static let subtleSurface = Color(.sRGB, red: 236 / 255, green: 235 / 255, blue: 236 / 255) // #ECEBEC
-        static let accent = Color(.sRGB, red: 11 / 255, green: 135 / 255, blue: 147 / 255) // #0B8793
-        static let accentInk = Color(.sRGB, red: 7 / 255, green: 94 / 255, blue: 103 / 255) // #075E67
-        static let accentSurface = Color(.sRGB, red: 229 / 255, green: 244 / 255, blue: 245 / 255) // #E5F4F5
-        static let accentBorder = Color(.sRGB, red: 185 / 255, green: 224 / 255, blue: 228 / 255) // #B9E0E4
+        static let accent = Color(.sRGB, red: 30 / 255, green: 75 / 255, blue: 153 / 255) // #1E4B99
+        static let accentInk = Color(.sRGB, red: 22 / 255, green: 58 / 255, blue: 122 / 255) // #163A7A
+        static let accentSurface = Color(.sRGB, red: 232 / 255, green: 238 / 255, blue: 248 / 255) // #E8EEF8
+        static let accentBorder = Color(.sRGB, red: 197 / 255, green: 211 / 255, blue: 236 / 255) // #C5D3EC
         static let action = Color(.sRGB, red: 46 / 255, green: 107 / 255, blue: 240 / 255) // #2E6BF0
         static let actionInk = Color(.sRGB, red: 36 / 255, green: 83 / 255, blue: 194 / 255) // #2453C2
         static let actionSurface = Color(.sRGB, red: 238 / 255, green: 243 / 255, blue: 255 / 255) // #EEF3FF
         static let actionBorder = Color(.sRGB, red: 217 / 255, green: 228 / 255, blue: 253 / 255) // #D9E4FD
         static let ai = Color(.sRGB, red: 122 / 255, green: 90 / 255, blue: 248 / 255) // #7A5AF8
         static let aiSurface = Color(.sRGB, red: 243 / 255, green: 240 / 255, blue: 255 / 255) // #F3F0FF
-        static let ink = Color(.sRGB, red: 31 / 255, green: 35 / 255, blue: 40 / 255) // #1F2328
+        static let ink = Color(.sRGB, red: 17 / 255, green: 28 / 255, blue: 52 / 255) // #111C34
         static let selectedSurface = Color(.sRGB, red: 255 / 255, green: 255 / 255, blue: 255 / 255) // #FFFFFF
         static let muted = Color(.sRGB, red: 106 / 255, green: 111 / 255, blue: 120 / 255) // #6A6F78
         static let faint = Color(.sRGB, red: 163 / 255, green: 168 / 255, blue: 177 / 255) // #A3A8B1
@@ -107,7 +107,7 @@ typealias Typography = DesignTokens.Typography
 typealias IconToken = DesignTokens.Icons
 typealias LayoutToken = DesignTokens.Layout
 
-/// The Mekak Talk mark on its teal tile.
+/// The Mekak Talk mark on its blue tile.
 struct MekakLogo: View {
     var size: CGFloat = 28
     var body: some View {
