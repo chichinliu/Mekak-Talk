@@ -71,11 +71,7 @@ final class AppModel: ObservableObject {
     private var sessionSettings = TalkSettings()
     private var sessionHints: [String] = []
     private var sessionContext: ScreenContext?
-    /// Entities and tags from the Hyday folder; only ever used as recognition hints.
     @Published private(set) var lastCorrectionCheck: CorrectionCheck?
-    @Published private(set) var hydayVocabulary: [String] = []
-    @Published private(set) var scanningHydayVocabulary = false
-    private var vocabularyTask: Task<Void, Never>?
     @Published private(set) var usage = UsageLedger()
     private var workspaceObservers: [NSObjectProtocol] = []
 
@@ -123,7 +119,6 @@ final class AppModel: ObservableObject {
         }
         TextInsertion.startTracking()
         refreshPermissions()
-        reloadHydayVocabulary()
         permissionsTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refreshPermissions() }
         }
@@ -222,32 +217,8 @@ final class AppModel: ObservableObject {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_" + pane) { NSWorkspace.shared.open(url) }
     }
 
-    /// The folder chosen on the Hyday page, otherwise Hyday's own configured folder.
-    var hydayRoot: URL? {
-        if let folder = settings.hydayFolder {
-            let url = URL(fileURLWithPath: folder)
-            return HydayVault.isDirectory(url) ? url : nil
-        }
-        return HydayVault.configuredRoot()
-    }
-
-    func reloadHydayVocabulary() {
-        vocabularyTask?.cancel()
-        guard let root = hydayRoot else { hydayVocabulary = []; return }
-        scanningHydayVocabulary = true
-        vocabularyTask = Task {
-            let terms = try? await Task.detached(priority: .utility) { try HydayVocabulary.scan(root: root) }.value
-            guard !Task.isCancelled else { return }
-            hydayVocabulary = terms ?? []; scanningHydayVocabulary = false
-        }
-    }
-
     func begin(action: VoiceAction = .dictate) {
         guard !phase.busy else { return }
-        if action == .hyday, hydayRoot == nil {
-            self.action = action; result = ""
-            fail(TalkError("請先在 Hyday 頁設定 Hyday 資料夾。")); return
-        }
         refreshPermissions()
         if !microphoneAllowed || (settings.speechBackend == .system && !speechAllowed) {
             openPermissionGuide(at: !microphoneAllowed ? .microphone : .speech)
@@ -260,18 +231,17 @@ final class AppModel: ObservableObject {
         do { try validate(snapshot, action: action) }
         catch { fail(error); return }
         let focused = TextInsertion.capture()
-        target = action == .hyday ? nil : focused
+        target = focused
         if target?.secure == true { fail(TalkError("這是密碼欄位。請改在一般文字輸入框使用。")); return }
         // Read before the panel appears, while the cursor is still where the user will type.
         sessionContext = focused.flatMap { snapshot.shouldReadScreenContext(for: action, app: $0.name) ? TextInsertion.screenContext(of: $0) : nil }
         sessionID = UUID(); let current = sessionID
         sessionSettings = snapshot; self.action = action
-        sessionHints = RecognitionHints.terms(dictionary: snapshot.dictionary, vocabulary: hydayVocabulary)
+        sessionHints = RecognitionHints.terms(dictionary: snapshot.dictionary)
         let hints = sessionHints
         result = ""; transcript = ""; notice = ""; missedInsertion = false; elapsed = 0; level = 0
-        destination = action == .hyday ? "Hyday"
-            : (snapshot.autoInsert && action != .ask && (target?.editable != true || target?.element == nil)
-               ? "剪貼簿" : (target?.name ?? "結果區"))
+        destination = snapshot.autoInsert && action != .ask && (target?.editable != true || target?.element == nil)
+            ? "剪貼簿" : (target?.name ?? "結果區")
         phase = .preparing; onPanelChange?()
         operation = Task {
             do {
@@ -311,8 +281,7 @@ final class AppModel: ObservableObject {
     func finish() {
         guard phase == .recording else { return }
         recordingTimer?.invalidate(); recordingTimer = nil
-        let spokeAt = Date()
-        elapsed = spokeAt.timeIntervalSince(started); audio.stop(); level = 0
+        elapsed = Date().timeIntervalSince(started); audio.stop(); level = 0
         let duration = elapsed; let current = sessionID; let snapshot = sessionSettings
         let voiceAction = action; let inputTarget = target; let hints = sessionHints; let context = sessionContext
         phase = .transcribing; onPanelChange?()
@@ -341,7 +310,6 @@ final class AppModel: ObservableObject {
                 transcript = raw
                 let cleaned = TextProcessing.clean(raw, settings: snapshot)
                 var output = cleaned
-                var aiFormatted = false
                 if snapshot.requiresTextModel(for: voiceAction) && snapshot.textBackend != .basic {
                     phase = .processing
                     do {
@@ -355,13 +323,11 @@ final class AppModel: ObservableObject {
                            let laidOut = try? await complete(prompt: ParagraphLayout.prompt(output), settings: snapshot) {
                             output = ParagraphLayout.accept(laidOut, original: output)
                         }
-                        aiFormatted = true
                     }
                     catch is CancellationError { throw CancellationError() }
                     catch {
                         result = cleaned
                         if voiceAction == .dictate { notice = "AI 整理未完成，已保留原始辨識文字。" }
-                        else if voiceAction == .hyday { notice = "AI 整理未完成，已記成一般列點。" }
                         else { throw error }
                     }
                 }
@@ -369,17 +335,7 @@ final class AppModel: ObservableObject {
                 output = TextProcessing.formatOutput(output, action: voiceAction, settings: snapshot)
                 result = output
                 var delivered = false
-                if voiceAction == .hyday {
-                    // Kept as the result first, so a failed write still leaves the text to copy.
-                    let formatted = aiFormatted ? HydayEntryFormatting.entry(output, time: HydayEntryFormatting.time(spokeAt)) : ""
-                    let entry = HydayEntryFormatting.stamped(formatted.isEmpty ? HydayVault.bullet(output) : formatted,
-                                                             time: HydayEntryFormatting.time(spokeAt)); result = entry
-                    guard let root = hydayRoot else { throw TalkError("找不到 Hyday 資料夾，請到 Hyday 頁重新設定。") }
-                    try await Task.detached(priority: .userInitiated) {
-                        try HydayVault(root: root).appendToJournal(entry)
-                    }.value
-                    notice = notice.isEmpty ? "已記到 Hyday 今天的日誌。" : notice + " 已記到 Hyday 今天的日誌。"
-                } else if snapshot.autoInsert && voiceAction != .ask {
+                if snapshot.autoInsert && voiceAction != .ask {
                     let message: String
                     do {
                         message = try await TextInsertion.insert(output, target: inputTarget)
@@ -395,21 +351,16 @@ final class AppModel: ObservableObject {
                     notice = notice.isEmpty ? message : notice + " " + message
                 } else { notice = notice.isEmpty ? "文字已保留，可複製到需要的地方。" : notice }
                 try Task.checkCancellation(); guard sessionID == current else { return }
-                let place = voiceAction == .hyday ? "Hyday" : (inputTarget?.name ?? "結果區")
+                let place = inputTarget?.name ?? "結果區"
                 usage.record(words: TextProcessing.wordCount(output), seconds: duration,
                              app: place, action: voiceAction); saveUsage()
                 if snapshot.saveHistory {
-                    history.insert(DictationRecord(rawText: raw, text: voiceAction == .hyday ? result : output, action: voiceAction, backend: snapshot.speechBackend,
+                    history.insert(DictationRecord(rawText: raw, text: output, action: voiceAction, backend: snapshot.speechBackend,
                         duration: duration, destination: place), at: 0)
                     history = Array(history.prefix(200)); saveHistory()
                 }
                 // Insertion or clipboard fallback finishes before hiding; the result remains available.
                 phase = delivered ? .idle : .done; onPanelChange?()
-                if voiceAction == .hyday {
-                    // Confirm briefly, then get out of the way.
-                    try? await Task.sleep(for: .seconds(2))
-                    if sessionID == current, phase == .done { phase = .idle; onPanelChange?() }
-                }
             } catch is CancellationError { }
             catch { if sessionID == current { fail(error) } }
         }
@@ -446,7 +397,7 @@ final class AppModel: ObservableObject {
         switch settings.speechBackend {
         case .system: break
         case .whisper:
-            guard localModels.engineReady(for: settings.whisperModel) else { throw TalkError("辨識引擎尚未就緒，請重新安裝 Hyday Talk。") }
+            guard localModels.engineReady(for: settings.whisperModel) else { throw TalkError("辨識引擎尚未就緒，請重新安裝本 App。") }
             guard SpeechCLIConfiguration.isReadableModel(settings.whisperModel) else {
                 throw TalkError("請在「語音辨識」下載並選擇本機模型。")
             }
@@ -454,7 +405,7 @@ final class AppModel: ObservableObject {
             try SpeechCLIConfiguration.validate(settings)
         case .api: try validateAPI(settings.speechAPI, account: "speech")
         }
-        if action != .dictate && action != .hyday && settings.textBackend == .basic { throw TalkError("翻譯與提問需要文字 AI，請在「文字整理」選擇本機 AI 或 API Key。") }
+        if action != .dictate && settings.textBackend == .basic { throw TalkError("翻譯與提問需要文字 AI，請在「文字整理」選擇本機 AI 或 API Key。") }
         guard settings.requiresTextModel(for: action) else { return }
         if settings.textBackend == .local {
             guard !(settings.localTextModel ?? "").isEmpty else { throw TalkError("請在「文字整理」選擇本機文字模型。") }
@@ -473,12 +424,7 @@ final class AppModel: ObservableObject {
 
     private func process(text: String, selection: String, action: VoiceAction, settings: TalkSettings,
                          context: ScreenContext? = nil) async throws -> String {
-        var notes: [HydayNote]?
-        if action == .ask, settings.asksHydayNotes, settings.textBackend != .basic, let root = hydayRoot {
-            notes = await HydaySearchService.notes(root: root, query: String([text, selection].filter { !$0.isEmpty }.joined(separator: " ").prefix(200)))
-            try Task.checkCancellation()
-        }
-        let prompt = try TextProcessing.prompt(action: action, transcript: text, selection: selection, settings: settings, notes: notes, context: context)
+        let prompt = try TextProcessing.prompt(action: action, transcript: text, selection: selection, settings: settings, context: context)
         return settings.textBackend == .basic ? text : try await complete(prompt: prompt, settings: settings)
     }
 

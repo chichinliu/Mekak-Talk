@@ -68,7 +68,6 @@ private struct MenuContent: View {
             Button("開始聽寫 · fn") { model.begin() }
             Button("開始翻譯 · fn + 左 ⇧") { model.begin(action: .translate) }
             Button("開始提問 · fn + Control") { model.begin(action: .ask) }
-            Button("記到 Hyday · fn + Space") { model.begin(action: .hyday) }
         }
         if model.phase.busy { Button("取消 · esc") { model.cancel() } }
         if !model.result.isEmpty { Button("複製最近結果") { model.copyResult() } }

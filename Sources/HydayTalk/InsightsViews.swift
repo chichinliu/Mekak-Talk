@@ -326,7 +326,6 @@ struct ActionShare: View {
         case .dictate: return Palette.accent
         case .translate: return Palette.action
         case .ask: return Palette.ai
-        case .hyday: return Palette.success
         }
     }
     var body: some View {

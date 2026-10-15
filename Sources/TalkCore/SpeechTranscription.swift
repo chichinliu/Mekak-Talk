@@ -12,7 +12,7 @@ public enum SpeechTranscription {
         case .system: throw TalkError("系統辨識需從即時音訊串流取得結果。")
         case .whisper:
             let prefix = file.deletingLastPathComponent().appendingPathComponent("transcript").path
-            let terms = hints ?? RecognitionHints.terms(dictionary: settings.dictionary, vocabulary: [])
+            let terms = hints ?? RecognitionHints.terms(dictionary: settings.dictionary)
             do {
                 if LocalSpeechModel.engine(forModelPath: settings.whisperModel) == .qwen {
                     _ = try await ProcessRunner.run(executable: qwenExecutable(settings: settings),
@@ -37,7 +37,7 @@ public enum SpeechTranscription {
             let data = try Data(contentsOf: file)
             guard data.count <= 25_000_000 else { throw TalkError("錄音檔超過上傳大小限制。請縮短錄音。") }
             output = try await APIClient.transcription(audio: data, settings: settings.speechAPI, key: key,
-                language: settings.languageCode, dictionary: hints ?? RecognitionHints.terms(dictionary: settings.dictionary, vocabulary: []), session: session)
+                language: settings.languageCode, dictionary: hints ?? RecognitionHints.terms(dictionary: settings.dictionary), session: session)
         }
         return try validatedText(output)
     }
@@ -57,7 +57,7 @@ public enum SpeechTranscription {
         return arguments + [file.path]
     }
 
-    /// Whisper biases toward words in its initial prompt, so dictionary and Hyday terms are
+    /// Whisper biases toward words in its initial prompt, so dictionary terms are
     /// spelled right, and a Traditional Chinese prompt keeps the output in Traditional script.
     public static func whisperArguments(settings: TalkSettings, file: URL, prefix: String, hints: [String]) -> [String] {
         var arguments = ["-m", (settings.whisperModel as NSString).expandingTildeInPath, "-f", file.path,

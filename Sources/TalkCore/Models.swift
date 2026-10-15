@@ -80,14 +80,13 @@ public enum DictationLayout: String, Codable, CaseIterable, Identifiable, Sendab
 }
 
 public enum VoiceAction: String, Codable, CaseIterable, Identifiable, Sendable {
-    case dictate, translate, ask, hyday
+    case dictate, translate, ask
     public var id: String { rawValue }
     public var title: String {
         switch self {
         case .dictate: return "聽寫"
         case .translate: return "翻譯"
         case .ask: return "提問 / 編輯"
-        case .hyday: return "記到 Hyday"
         }
     }
     public var shortcut: String {
@@ -95,7 +94,6 @@ public enum VoiceAction: String, Codable, CaseIterable, Identifiable, Sendable {
         case .dictate: return "fn"
         case .translate: return "fn + 左 ⇧"
         case .ask: return "fn + Control"
-        case .hyday: return "fn + Space"
         }
     }
 }
@@ -197,16 +195,8 @@ public struct TalkSettings: Codable, Equatable, Sendable {
     var learnFromCorrections: Bool?
     var blockedCorrections: [DictionaryEntry]?
     var typingSpeed: Int?
-    /// A folder chosen in the Hyday page; nil follows Hyday's own `vault.root`.
-    public var hydayFolder: String?
-    var askHydayNotes: Bool?
     var readScreenContext: Bool?
     var screenContextExcluded: [String]?
-    /// Text questions answer from notes found in the Hyday folder; off by default.
-    public var asksHydayNotes: Bool {
-        get { askHydayNotes ?? false }
-        set { askHydayNotes = newValue }
-    }
     /// Used to estimate time saved; 40 sits in the common 20–50 range for Taiwanese Zhuyin typists.
     public var typingWordsPerMinute: Int {
         get { typingSpeed ?? 40 }
@@ -219,8 +209,6 @@ public struct TalkSettings: Codable, Equatable, Sendable {
     public init() {}
     public var languageCode: String { String(locale.prefix(2)) }
     public func requiresTextModel(for action: VoiceAction) -> Bool {
-        // Without a text AI, Hyday entries are stored as one cleaned list item.
-        if action == .hyday { return textBackend != .basic }
         return action != .dictate || (textBackend != .basic && writingStyle != .verbatim)
     }
 }

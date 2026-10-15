@@ -48,9 +48,8 @@ public struct FnShortcutState {
     public mutating func keyDown(code: UInt16, repeated: Bool, recording: Bool) -> ShortcutAction? {
         if code == 53, recording, !repeated { return .cancel }
         guard fnDown, !repeated else { return nil }
-        let canRecord = !usedInChord
         usedInChord = true
-        return code == 49 && canRecord ? .voice(.hyday) : nil
+        return nil
     }
     public mutating func reset() { self = FnShortcutState() }
 }

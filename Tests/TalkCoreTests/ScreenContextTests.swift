@@ -32,7 +32,6 @@ final class ScreenContextTests: XCTestCase {
         var settings = TalkSettings(); settings.textBackend = .local
         XCTAssertTrue(settings.shouldReadScreenContext(for: .dictate, app: "Mail"))
         XCTAssertTrue(settings.shouldReadScreenContext(for: .translate, app: "Mail"))
-        XCTAssertTrue(settings.shouldReadScreenContext(for: .hyday, app: "Mail"))
         XCTAssertFalse(settings.shouldReadScreenContext(for: .ask, app: "Mail"))
         XCTAssertFalse(settings.shouldReadScreenContext(for: .dictate, app: "1Password"))
         settings.screenContextExcludedApps.append("LINE")
