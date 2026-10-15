@@ -8,10 +8,10 @@ enum DesignTokens {
         static let sidebar = Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255) // #F2F2F2
         static let card = Color(.sRGB, red: 252 / 255, green: 252 / 255, blue: 252 / 255) // #FCFCFC
         static let subtleSurface = Color(.sRGB, red: 236 / 255, green: 235 / 255, blue: 236 / 255) // #ECEBEC
-        static let accent = Color(.sRGB, red: 242 / 255, green: 98 / 255, blue: 46 / 255) // #F2622E
-        static let accentInk = Color(.sRGB, red: 181 / 255, green: 70 / 255, blue: 28 / 255) // #B5461C
-        static let accentSurface = Color(.sRGB, red: 255 / 255, green: 241 / 255, blue: 233 / 255) // #FFF1E9
-        static let accentBorder = Color(.sRGB, red: 252 / 255, green: 220 / 255, blue: 200 / 255) // #FCDCC8
+        static let accent = Color(.sRGB, red: 11 / 255, green: 135 / 255, blue: 147 / 255) // #0B8793
+        static let accentInk = Color(.sRGB, red: 7 / 255, green: 94 / 255, blue: 103 / 255) // #075E67
+        static let accentSurface = Color(.sRGB, red: 229 / 255, green: 244 / 255, blue: 245 / 255) // #E5F4F5
+        static let accentBorder = Color(.sRGB, red: 185 / 255, green: 224 / 255, blue: 228 / 255) // #B9E0E4
         static let action = Color(.sRGB, red: 46 / 255, green: 107 / 255, blue: 240 / 255) // #2E6BF0
         static let actionInk = Color(.sRGB, red: 36 / 255, green: 83 / 255, blue: 194 / 255) // #2453C2
         static let actionSurface = Color(.sRGB, red: 238 / 255, green: 243 / 255, blue: 255 / 255) // #EEF3FF
@@ -83,10 +83,10 @@ enum DesignTokens {
         static let ambientShadow = Color.black.opacity(0.025)
     }
 
-    /// The mark: an H whose crossbar is an uneven waveform, drawn in a 100 × 100 box centred on y = 50.
+    /// The mark: seven waveform bars whose silhouette reads as an M, drawn in a 100 × 100 box centred on y = 50.
     enum Logo {
         static let bars: [(x: CGFloat, height: CGFloat, width: CGFloat)] = [
-            (18, 86, 14), (35, 18, 6.5), (42.5, 32, 6.5), (50, 24, 6.5), (57.5, 14, 6.5), (65, 20, 6.5), (82, 64, 14),
+            (14, 40, 8), (26, 86, 8), (38, 60, 8), (50, 24, 8), (62, 60, 8), (74, 86, 8), (86, 40, 8),
         ]
     }
 
@@ -107,7 +107,7 @@ typealias Typography = DesignTokens.Typography
 typealias IconToken = DesignTokens.Icons
 typealias LayoutToken = DesignTokens.Layout
 
-/// The Mekak Talk mark on its orange tile.
+/// The Mekak Talk mark on its teal tile.
 struct MekakLogo: View {
     var size: CGFloat = 28
     var body: some View {
