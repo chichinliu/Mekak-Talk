@@ -101,7 +101,7 @@ public enum VoiceAction: String, Codable, CaseIterable, Identifiable, Sendable {
 }
 
 public enum WritingStyle: String, Codable, CaseIterable, Identifiable, Sendable {
-    case natural, verbatim, professional
+    case verbatim, natural, professional
     public var id: String { rawValue }
     public var title: String {
         switch self {
@@ -112,12 +112,12 @@ public enum WritingStyle: String, Codable, CaseIterable, Identifiable, Sendable 
     }
     public var detail: String {
         switch self {
-        case .natural: return "保留口語語氣並補上標點，刪除重複與無意義贅詞，適合日常訊息。"
+        case .natural: return "保留口語語氣與情緒並補上標點，刪除多餘的贅詞與思考片段，適合日常訊息。"
         case .verbatim: return "保留辨識原文的字句，僅套用字形、既有標點與個人辭典，不使用 AI 改寫。"
-        case .professional: return "改用清楚簡潔的書面用語並補上標點，適合工作郵件與文件。"
+        case .professional: return "刪除所有贅詞，改用清楚簡潔的書面用語並補上標點，適合工作郵件與文件。"
         }
     }
-    public static let exampleInput = "明天下午3點要開會再麻煩Amy把API文件帶過來"
+    public static let exampleInput = "呃明天下午3點要開會，然後再麻煩Amy把API文件帶過來這樣"
     public var exampleOutput: String {
         switch self {
         case .natural: return "明天下午3點要開會，再麻煩Amy把API文件帶過來。"
@@ -127,9 +127,9 @@ public enum WritingStyle: String, Codable, CaseIterable, Identifiable, Sendable 
     }
     public var instruction: String {
         switch self {
-        case .natural: return "保留口語用詞與語氣，刪除無意義贅詞，不刻意改成書面用語。"
+        case .natural: return "保留說話者自己的用詞，只刪不換，不把口語詞換成意思相同的書面詞，例如我覺得就保持我覺得；自行判斷哪些簡單口語能帶出說話者的情緒與語氣轉折，感受、強調、遲疑、句首的嘆氣聲、無奈或勉強答應的語氣都算情緒要保留，其餘不帶意思的贅詞與說到一半的思考片段都刪除。"
         case .verbatim: return "保留辨識原文，不改寫字句。"
-        case .professional: return "將口語用詞換成簡潔書面用詞，可調整句構並保留原意；使用「請」取代「麻煩」等口語請求詞，不疊加客套詞，不要加入原文沒有的「請問」「能否」「是否」等問句，保留「可能」「應該」等原有的確定程度；正式風格也必須保留原文的阿拉伯數字，不改成國字數字。"
+        case .professional: return "贅詞、語助詞、口頭禪與思考過程的片段全部刪除，一個都不保留；將口語用詞換成簡潔書面用詞，可調整句構並保留原意；使用「請」取代「麻煩」等口語請求詞，不疊加客套詞，不要加入原文沒有的「請問」「能否」「是否」等問句，保留「可能」「應該」等原有的確定程度；正式風格也必須保留原文的阿拉伯數字，不改成國字數字。"
         }
     }
 }
