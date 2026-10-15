@@ -178,3 +178,9 @@ Hyday Talk 會讀取筆記中的 `@(名稱)` 與 `#標籤`，作為語音辨識�
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
 - [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp)
 - [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR)
+
+## 贊助
+
+如果這個專案對你有幫助，歡迎贊助支持我持續開發
+
+<a href="https://sponser.muki.tw"><img src="https://sponser.muki.tw/badge/sponsor-button.png" alt="贊助 MUKI" width="240"></a>
