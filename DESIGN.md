@@ -2,13 +2,13 @@
 name: Mekak Talk
 description: 原生 macOS 語音輸入工作區，淺灰工作區、柔和卡片與細字重數據
 colors:
-  workspace: "#F2F2F2"
-  sidebar: "#F2F2F2"
+  workspace: "#F3F5F9"
+  sidebar: "#F3F5F9"
   card: "#FCFCFC"
   surface: "#FFFFFF"
   subtle-surface: "#ECEBEC"
   canvas: "#FEFEFE"
-  ink: "#1F2328"
+  ink: "#111C34"
   muted: "#6A6F78"
   faint: "#A3A8B1"
   border: "#E3E5E9"
