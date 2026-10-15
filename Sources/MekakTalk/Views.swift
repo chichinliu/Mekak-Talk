@@ -5,7 +5,7 @@ import TalkCore
 
 /*
 THESIS: A native dictation workspace makes fn, output and configuration immediately legible.
-OWN-WORLD: Light gray workspace, soft cards, orange voice details,
+OWN-WORLD: Light gray workspace, soft cards, blue voice details,
 precise native controls and SF Symbols.
 STORY: Check readiness, configure speech and text, then dictate at the destination cursor.
 FIRST VIEWPORT: Persistent sidebar, compact page heading, white dictation and output cards,
@@ -14,7 +14,7 @@ FORM: Native behavior and the approved white floating panel remain.
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
 */
 enum Page: String, CaseIterable, Identifiable {
-    case home = "總覽", insights = "洞察", history = "聽寫紀錄", hyday = "Hyday", speech = "語音辨識", text = "文字整理", dictionary = "個人辭典", settings = "一般設定"
+    case home = "總覽", insights = "洞察", history = "聽寫紀錄", speech = "語音辨識", text = "文字整理", dictionary = "個人辭典", settings = "一般設定"
     var id: String { rawValue }
     var title: String { self == .home ? "語音輸入" : rawValue }
     var detail: String {
@@ -22,7 +22,6 @@ enum Page: String, CaseIterable, Identifiable {
         case .home: return "按 fn 開始聽寫，支援文字插入與複製。"
         case .insights: return "查看口述字數、節省時間與使用習慣。"
         case .history: return "查看這台 Mac 的聽寫紀錄，最多保留 200 筆。"
-        case .hyday: return "設定 Hyday 資料夾，將語音內容記到 Hyday 日誌。"
         case .speech: return "選擇辨識來源與語言，設定會自動儲存。"
         case .text: return "設定文字模型、聽寫風格與輸出格式。"
         case .dictionary: return "設定人名、品牌與術語的替換規則。"
@@ -34,7 +33,6 @@ enum Page: String, CaseIterable, Identifiable {
         case .home: return "house"
         case .insights: return "chart.bar"
         case .history: return "doc.text"
-        case .hyday: return "sun.horizon"
         case .speech: return "waveform"
         case .text: return "text.alignleft"
         case .dictionary: return "book.closed"
@@ -64,7 +62,6 @@ struct MainView: View {
                         case .home: HomeView(model: model, selectPage: { page = $0 })
                         case .insights: InsightsView(model: model)
                         case .history: HistoryView(model: model)
-                        case .hyday: HydaySettingsView(model: model)
                         case .speech: SpeechSettingsView(model: model)
                         case .text: TextSettingsView(model: model)
                         case .dictionary: DictionaryView(model: model)
@@ -94,15 +91,8 @@ struct MainView: View {
     private func navigationItem(_ item: Page) -> some View {
         Button { page = item } label: {
             HStack(spacing: 12) {
-                if item == .hyday, let icon = HydayBrand.icon {
-                    Image(nsImage: icon).resizable().interpolation(.high).aspectRatio(contentMode: .fit)
-                        // The icon is full-bleed, so match the optical size of the 16 pt line icons.
-                        .frame(width: 16, height: 16).clipShape(RoundedRectangle(cornerRadius: 4))
-                        .frame(width: 20, height: 20)
-                } else {
-                    Image(systemName: item.symbol).font(.system(size: 16, weight: .regular))
-                        .foregroundStyle(page == item ? Palette.accent : Palette.ink.opacity(0.78)).frame(width: 20)
-                }
+                Image(systemName: item.symbol).font(.system(size: 16, weight: .regular))
+                    .foregroundStyle(page == item ? Palette.accent : Palette.ink.opacity(0.78)).frame(width: 20)
                 Text(item.rawValue).font(Typography.font(.body, weight: page == item ? .medium : .regular))
                     .foregroundStyle(page == item ? Palette.ink : Palette.ink.opacity(0.85))
                 Spacer(minLength: 0)
@@ -114,14 +104,14 @@ struct MainView: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 22) {
             HStack(spacing: 9) {
-                HydayLogo(size: 28)
-                Text("Hyday Talk").font(Typography.font(.section, weight: .semibold)).fixedSize()
+                MekakLogo(size: 28)
+                Text("Mekak Talk").font(Typography.font(.section, weight: .semibold)).fixedSize()
             }.padding(.horizontal, 8).padding(.top, 10)
             VStack(alignment: .leading, spacing: 4) {
                 ForEach([Page.home, .insights, .history]) { item in navigationItem(item) }
                 Text("設定").font(Typography.font(.caption)).foregroundStyle(Palette.muted)
                     .padding(.horizontal, 12).padding(.top, 20).padding(.bottom, 6)
-                ForEach([Page.hyday, .speech, .text, .dictionary, .settings]) { item in navigationItem(item) }
+                ForEach([Page.speech, .text, .dictionary, .settings]) { item in navigationItem(item) }
             }
             Spacer(minLength: 24)
             SidebarJobs(installer: model.textModelInstaller, updater: model.updater, openText: { page = .text })
@@ -276,7 +266,7 @@ struct HomeView: View {
                 .disabled(model.phase.busy && model.phase != .recording)
                 .help(model.settings.autoInsert ? "完成後插入原輸入框，無法插入時自動複製文字。" : "開始聽寫，結果保留供複製。")
         }.padding(.horizontal, DesignTokens.Surfaces.padding).padding(.vertical, 18).frame(maxWidth: .infinity, minHeight: 96)
-            // The one card framed by its own orange border instead of the shared white shell.
+            // The one card framed by its own blue border instead of the shared white shell.
             .background(LinearGradient(colors: [Palette.accentSurface, Palette.card], startPoint: .leading, endPoint: .trailing),
                         in: RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius))
             .overlay(RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius).strokeBorder(Palette.accentBorder, lineWidth: 1))
@@ -384,7 +374,6 @@ struct ShortcutSummary: View {
             shortcut("聽寫", keys: ["fn"])
             shortcut("翻譯", keys: ["fn", "左 ⇧"])
             shortcut("文字提問", keys: ["fn", "Control"])
-            shortcut("記到 Hyday", keys: ["fn", "Space"])
             shortcut("取消", keys: ["esc"])
         }
     }
@@ -464,7 +453,6 @@ struct HistoryView: View {
         case .dictate: return "聽寫"
         case .translate: return "翻譯"
         case .ask: return "提問"
-        case .hyday: return "Hyday"
         }
     }
     private func tint(_ action: VoiceAction) -> Color {
@@ -472,7 +460,6 @@ struct HistoryView: View {
         case .dictate: return Palette.accent
         case .translate: return Palette.action
         case .ask: return Palette.ai
-        case .hyday: return Palette.success
         }
     }
     var body: some View {
@@ -628,7 +615,7 @@ private struct SidebarJobs: View {
                 }
             }
         case .ready:
-            job(symbol: "checkmark.circle", title: "\(update.version) 已下載", detail: "結束 Hyday Talk 後，把新版拖進應用程式資料夾") {
+            job(symbol: "checkmark.circle", title: "\(update.version) 已下載", detail: "結束 Mekak Talk 後，把新版拖進應用程式資料夾") {
                 Button("打開安裝檔", action: updater.openInstaller).buttonStyle(AlignButtonStyle(kind: .primary)).controlSize(.small)
             }
         case .failed(let message):

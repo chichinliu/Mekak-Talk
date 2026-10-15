@@ -295,7 +295,7 @@ struct DictionaryView: View {
                 Text("加入的詞彙可協助語音辨識與文字 AI 寫出正確的內容。")
                     .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
             }
-            LabeledField("詞彙", placeholder: "例如：Hyday", text: $term).onSubmit(add)
+            LabeledField("詞彙", placeholder: "例如：Notion", text: $term).onSubmit(add)
             LabeledField("常聽錯成（選填）", placeholder: "例如：海得、hide day", text: $misheard).onSubmit(add)
             Text("可填多個寫法，以頓號或逗號分隔。辨識結果中的這些文字會換成詞彙。")
                 .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
@@ -359,7 +359,7 @@ struct GeneralSettingsView: View {
                     Toggle("聽寫與翻譯完成後，自動插入原本的文字框", isOn: $model.settings.autoInsert).labelsHidden()
                 }
                 SettingsRow(title: "從修改內容自動學習詞彙",
-                            detail: "插入文字後，Hyday Talk 會讀取該輸入框的內容並與插入文字比對，僅將修正過的詞彙加入個人辭典，不保存其他內容。") {
+                            detail: "插入文字後，Mekak Talk 會讀取該輸入框的內容並與插入文字比對，僅將修正過的詞彙加入個人辭典，不保存其他內容。") {
                     Toggle("從修改內容自動學習詞彙", isOn: $model.settings.learnsFromCorrections).labelsHidden()
                 }
                 SettingsRow(title: "在這台 Mac 保留文字紀錄") {
@@ -374,7 +374,7 @@ struct GeneralSettingsView: View {
                     }.fixedSize()
                 }
             }.disabled(model.phase.busy)
-            SettingsGroup(title: "Hyday Talk 0.1.0") {
+            SettingsGroup(title: "Mekak Talk 0.1.0") {
                 SettingsBlock { Note("支援 macOS 14 以上及系統預設麥克風，提供聽寫、翻譯與文字提問功能，提問不包含網路搜尋或外部操作。") }
             }
         }

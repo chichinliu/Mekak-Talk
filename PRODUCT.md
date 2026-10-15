@@ -1,4 +1,4 @@
-# Hyday Talk
+# Mekak Talk
 
 <!-- impeccable:product-schema 1 -->
 
@@ -47,7 +47,7 @@ macos
 
 ## Brand Commitments
 
-產品名稱為 Hyday Talk，品牌色為語音橘
+產品名稱為 Mekak Talk，品牌色為皇家藍，輔以金黃色
 
 介面以淺灰工作區、柔和卡片與細字重的大數字呈現質感，不使用黑色主色，也不在使用者可見的文字中提及其他產品或參考來源
 

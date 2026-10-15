@@ -67,7 +67,7 @@ final class AppUpdater: ObservableObject {
                     }
                 }
                 let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0]
-                let destination = downloads.appendingPathComponent("Hyday-Talk-\(update.version).dmg")
+                let destination = downloads.appendingPathComponent("Mekak-Talk-\(update.version).dmg")
                 try? FileManager.default.removeItem(at: destination)
                 try FileManager.default.moveItem(at: file, to: destination)
                 state = .ready(destination)

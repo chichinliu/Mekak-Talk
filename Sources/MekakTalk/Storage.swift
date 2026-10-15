@@ -3,7 +3,7 @@ import Security
 import TalkCore
 
 enum KeyStore {
-    private static let service = "tw.muki.hyday-talk"
+    private static let service = "com.chichinliu.mekak-talk"
     static func read(_ account: String) -> String {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service, kSecAttrAccount as String: account,
@@ -35,12 +35,12 @@ struct LocalStore {
     static let isDevelopment = Bundle.main.bundleIdentifier?.hasSuffix(".dev") == true
     private static let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     /// The release build's folder; speech models live here for both builds so they are downloaded once.
-    static let releaseDirectory = base.appendingPathComponent("HydayTalk", isDirectory: true)
+    static let releaseDirectory = base.appendingPathComponent("MekakTalk", isDirectory: true)
 
     let directory: URL
     init() {
         guard Self.isDevelopment else { directory = Self.releaseDirectory; return }
-        directory = Self.base.appendingPathComponent("HydayTalk Dev", isDirectory: true)
+        directory = Self.base.appendingPathComponent("MekakTalk Dev", isDirectory: true)
         // Start from a copy of the release settings, so the dev build is usable straight away.
         let manager = FileManager.default
         if !manager.fileExists(atPath: directory.path) {

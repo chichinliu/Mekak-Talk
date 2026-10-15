@@ -5,9 +5,12 @@ final class HintEchoTests: XCTestCase {
     let hints = ["Hyday", "Ethan", "Zoe", "Vito", "禹掄", "義倫", "Alan", "開發日誌", "projects/Hyday", "Bruce",
                  "idea", "projects/家居裝潢", "areas/家庭育兒", "祐祐", "睿睿", "thought", "quote"]
 
-    func testHierarchicalTagsKeepOnlyTheirLastPart() {
-        let terms = RecognitionHints.terms(dictionary: [], vocabulary: ["projects/Hyday", "Hyday", "areas/家庭育兒", "projects/家居裝潢"])
-        XCTAssertEqual(terms, ["Hyday", "家庭育兒", "家居裝潢"])
+    func testManualTermsComeBeforeLearnedOnesAndRespectTheCap() {
+        let learned = DictionaryEntry(term: "新學到", isAutomatic: true)
+        let older = DictionaryEntry(term: "舊學到", isAutomatic: true)
+        let dictionary = [older, DictionaryEntry(term: "手動"), learned]
+        XCTAssertEqual(RecognitionHints.terms(dictionary: dictionary), ["手動", "新學到", "舊學到"])
+        XCTAssertEqual(RecognitionHints.terms(dictionary: dictionary, limit: 2), ["手動", "新學到"])
     }
 
     func testTranscriptThatRepeatsTheHintListIsAnEcho() {

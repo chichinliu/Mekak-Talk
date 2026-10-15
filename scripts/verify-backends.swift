@@ -7,7 +7,7 @@ struct VerifyBackends {
     static func main() async throws {
         let arguments = CommandLine.arguments
         guard arguments.count >= 4 else { throw TalkError("Usage: verify-backends <whisper-cli> <model.bin> <sample.wav> [ollama] [model-name]") }
-        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("HydayTalkVerification-" + UUID().uuidString)
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("MekakTalkVerification-" + UUID().uuidString)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
         let file = folder.appendingPathComponent("sample with spaces.wav")

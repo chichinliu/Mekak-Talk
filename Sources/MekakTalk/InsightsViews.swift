@@ -326,7 +326,6 @@ struct ActionShare: View {
         case .dictate: return Palette.accent
         case .translate: return Palette.action
         case .ask: return Palette.ai
-        case .hyday: return Palette.success
         }
     }
     var body: some View {
@@ -441,7 +440,7 @@ struct HighlightCard: View {
             Spacer(minLength: 0)
         }.foregroundStyle(Color.white).padding(20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(LinearGradient(colors: [Color(red: 0.24, green: 0.40, blue: 0.86), Color(red: 0.44, green: 0.56, blue: 0.86), Color(red: 0.96, green: 0.62, blue: 0.42)],
+            .background(LinearGradient(colors: [Color(red: 0.24, green: 0.40, blue: 0.86), Color(red: 0.44, green: 0.56, blue: 0.86), Color(red: 0.96, green: 0.65, blue: 0.14)],
                                        startPoint: .topLeading, endPoint: .bottomTrailing),
                         in: RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius))
             .shadow(color: Color.black.opacity(0.06), radius: 8, y: 4)

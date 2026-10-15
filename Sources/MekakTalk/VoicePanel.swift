@@ -135,11 +135,6 @@ struct VoiceBarView: View {
                     Text(compactTitle).font(Typography.font(.caption, weight: .semibold)).lineLimit(1)
                         .fixedSize(horizontal: state.missedInsertion, vertical: false)
                         .help(state.notice.isEmpty ? compactTitle : state.notice)
-                    // A Hyday entry is not inserted anywhere, so preview what was written.
-                    if state.phase == .done, state.action == .hyday, !state.result.isEmpty {
-                        Text(state.result).font(Typography.font(.caption)).foregroundStyle(Palette.muted)
-                            .lineLimit(1).truncationMode(.tail)
-                    }
                 }
                 Spacer(minLength: 0)
             }
@@ -167,7 +162,6 @@ struct VoiceBarView: View {
             case .dictate: return "錄音中"
             case .translate: return "翻譯錄音"
             case .ask: return "提問錄音"
-            case .hyday: return "Hyday 錄音"
             }
         case .transcribing: return "辨識中"
         case .processing:
@@ -175,11 +169,10 @@ struct VoiceBarView: View {
             case .dictate: return "整理中"
             case .translate: return "翻譯中"
             case .ask: return "回應中"
-            case .hyday: return "寫入中"
             }
         case .done:
             if state.missedInsertion { return "沒有可插入的位置" }
-            return state.action == .hyday ? "已記到 Hyday" : "已完成"
+            return "已完成"
         case .failed: return "處理失敗"
         }
     }

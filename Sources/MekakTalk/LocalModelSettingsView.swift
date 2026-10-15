@@ -9,7 +9,7 @@ struct LocalModelSettingsView: View {
         SettingsGroup(title: "選擇本機語音模型", detail: "模型在這台 Mac 辨識語音，錄音不會上傳。") {
             if !manager.engineReady {
                 SettingsBlock {
-                    Label("辨識引擎尚未就緒，請重新安裝 Hyday Talk。", systemImage: "exclamationmark.circle")
+                    Label("辨識引擎尚未就緒，請重新安裝 Mekak Talk。", systemImage: "exclamationmark.circle")
                         .font(Typography.font(.caption)).foregroundStyle(Palette.ink)
                 }
             }

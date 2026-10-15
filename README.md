@@ -1,10 +1,10 @@
-# Hyday Talk
+# Mekak Talk
 
-Hyday Talk 是一款原生 macOS 語音輸入工具，使用者在任何 App 中按下 fn 即可開始說話，再按一次 fn 完成，辨識並整理後的文字會插入原本的游標位置
+Mekak Talk 是一款原生 macOS 語音輸入工具，使用者在任何 App 中按下 fn 即可開始說話，再按一次 fn 完成，辨識並整理後的文字會插入原本的游標位置
 
-Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需上傳
+Mekak Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需上傳
 
-![Hyday Talk 總覽畫面](docs/images/screenshot.png)
+![Mekak Talk 總覽畫面](docs/images/screenshot.png)
 
 ## 主要功能
 
@@ -14,7 +14,6 @@ Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 - **文字整理**：補上標點、刪除口語贅字、依前後文修正同音錯字，並自動將列舉事項排成編號列表
 - **個人辭典**：記錄常說的人名、產品與術語，提供給語音辨識與文字 AI 作為提示，並可從使用者對插入文字的修正中自動學習
 - **洞察**：統計口述字數、節省時間、口述速度、使用時段與常用 App
-- **與 [Hyday](https://hyday.tw) 整合**：以語音記錄 Hyday 日誌，提問時參考 Hyday 筆記，並以筆記中的名稱與標籤提升辨識準確度
 
 ## 系統需求
 
@@ -26,9 +25,9 @@ Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 
 ## 安裝
 
-1. 至 [Releases](https://github.com/mukiwu/hyday-talk/releases) 下載最新版本的 `Hyday-Talk-<版本>.dmg`
-2. 開啟 DMG，將 Hyday Talk 拖曳至應用程式資料夾
-3. 從應用程式資料夾開啟 Hyday Talk
+1. 至 [Releases](https://github.com/chichinliu/Mekak-Talk/releases) 下載最新版本的 `Mekak-Talk-<版本>.dmg`
+2. 開啟 DMG，將 Mekak Talk 拖曳至應用程式資料夾
+3. 從應用程式資料夾開啟 Mekak Talk
 
 ## 初次設定
 
@@ -42,7 +41,7 @@ Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 
 之後可從側欄底部的權限指引重新開啟
 
-若輔助使用開關已開啟，App 仍顯示未授權，通常是系統保留了舊版本的簽章授權，請至系統設定的隱私權與安全性，於輔助使用清單移除舊的 Hyday Talk，重新加入應用程式資料夾中的 Hyday Talk 並開啟，再返回 App 按下重新檢查，詳細說明請參閱 [Apple TN3127](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements)
+若輔助使用開關已開啟，App 仍顯示未授權，通常是系統保留了舊版本的簽章授權，請至系統設定的隱私權與安全性，於輔助使用清單移除舊的 Mekak Talk，重新加入應用程式資料夾中的 Mekak Talk 並開啟，再返回 App 按下重新檢查，詳細說明請參閱 [Apple TN3127](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements)
 
 ## 快捷鍵
 
@@ -51,7 +50,6 @@ Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 | 開始或完成聽寫 | fn |
 | 開始翻譯 | fn ＋ 左 Shift |
 | 文字提問 | fn ＋ Control |
-| 記到 Hyday | fn ＋ Space |
 | 取消錄音或處理 | esc |
 
 若按下 fn 會同時開啟表情符號或 macOS 聽寫，請至系統設定的鍵盤，將按下 🌐 鍵來設為不執行動作
@@ -75,53 +73,9 @@ Hyday Talk 為原生 macOS App，語音辨識可在本機完成，錄音不需�
 
 這個組合對中文口語與中英夾雜較準確，全部在本機執行，也可以在 App 內改用其他模型
 
-本機辨識引擎 whisper.cpp 與 transcribe.cpp 已內建於 App，不需另行安裝；Qwen3-ASR 模型採 Apache 2.0 授權，個人辭典與 Hyday 詞彙會作為辨識詞彙提示
+本機辨識引擎 whisper.cpp 與 transcribe.cpp 已內建於 App，不需另行安裝；Qwen3-ASR 模型採 Apache 2.0 授權，個人辭典會作為辨識詞彙提示
 
 API 來源需支援 `POST /audio/transcriptions` 並回傳含 `text` 欄位的 JSON，遠端服務僅接受 HTTPS；本機服務可使用 HTTP 並免填 API Key
-
-## 與 Hyday 整合
-
-[Hyday](https://hyday.tw) 是一款本地優先的 AI 個人知識庫秘書，將筆記、網頁、文件、日誌與行事曆連結在同一套工作流裡
-
-筆記保存在使用者自己的資料夾，提供 macOS 與 Windows 桌面版
-
-Hyday Talk 直接讀寫 Hyday 的筆記資料夾，不需要開啟 Hyday，也不需要另外安裝其他工具
-
-相關設定集中於側欄的 Hyday 頁，資料夾預設沿用 Hyday 的設定，也可以自行選擇
-
-### 記到 Hyday
-
-按 fn 加 Space 說話，內容會加在 Hyday 資料夾當天日誌的最後面，一般聽寫不會寫入 Hyday
-
-設定文字 AI 後，說的話會依 Hyday 的 Life Log 規則整理成 Markdown：
-
-| 說的內容 | 寫入的格式 |
-| --- | --- |
-| 開始做某件事 | `>(時間) 內容` |
-| 結束某件事 | `<(時間) 內容` |
-| 目前的狀態 | `-(時間) 內容` |
-| 想法 | `%(內容)` |
-| 重要事項 | `!(內容)` |
-| 提醒與待辦 | `- [ ] 內容` |
-| 較長的回顧 | 小標題加上列點 |
-
-一次說的話可以同時產生多行，例如一筆待辦加上一則想法
-
-每筆記錄的第一行都會標上說話當下的時間，時間由 App 填入，不由 AI 決定；AI 輸出格式不符時，該行會改為一般列點，內容不會遺失
-
-沒有設定文字 AI 時，整理後的原文會寫成一個列點
-
-寫入時只會加在日誌最後面，並保留原本的 frontmatter，即使 Hyday 正在編輯同一份日誌，新內容也會接在草稿後面，不會覆蓋尚未儲存的內容；當天日誌不存在時，會依 Hyday 的日誌範本建立
-
-### 問筆記
-
-開啟後，文字提問會先搜尋 Hyday 筆記，以找到的內容作為參考回答，並在最後附上相關筆記的連結
-
-已安裝 Hyday 時使用 Hyday 內建的搜尋，否則使用 Hyday Talk 的關鍵字搜尋，搜尋不包含 Hyday 自行管理的資料夾與 AI 衍生內容
-
-### Hyday 詞彙
-
-Hyday Talk 會讀取筆記中的 `@(名稱)` 與 `#標籤`，作為語音辨識的提示，讓人名、專案與主題更容易辨識正確，這些詞彙不會加入個人辭典
 
 ## 文字整理
 
@@ -164,7 +118,7 @@ Hyday Talk 會讀取筆記中的 `@(名稱)` 與 `#標籤`，作為語音辨識�
 
 ## 隱私與資料儲存
 
-- 設定、聽寫紀錄（最多 200 筆）與使用統計存放於 `~/Library/Application Support/HydayTalk/`，不使用雲端同步
+- 設定、聽寫紀錄（最多 200 筆）與使用統計存放於 `~/Library/Application Support/MekakTalk/`，不使用雲端同步
 - API Key 存放於 macOS 鑰匙圈，不寫入設定檔
 - 系統辨識不寫入音訊檔；其他來源的暫存音訊於完成或取消後刪除，下次啟動時亦會清理殘留檔案
 - 插入文字時透過剪貼簿送出貼上指令，並於 0.8 秒後還原原本的剪貼簿內容
@@ -178,9 +132,3 @@ Hyday Talk 會讀取筆記中的 `@(名稱)` 與 `#標籤`，作為語音辨識�
 - [whisper.cpp](https://github.com/ggml-org/whisper.cpp)
 - [transcribe.cpp](https://github.com/handy-computer/transcribe.cpp)
 - [Qwen3-ASR](https://github.com/QwenLM/Qwen3-ASR)
-
-## 贊助
-
-如果這個專案對你有幫助，歡迎贊助支持我持續開發
-
-<a href="https://sponsor.muki.tw"><img src="https://sponsor.muki.tw/badge/sponsor-button.png" alt="贊助 MUKI" width="240"></a>

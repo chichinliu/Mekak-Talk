@@ -1,25 +1,25 @@
 ---
-name: Hyday Talk
+name: Mekak Talk
 description: 原生 macOS 語音輸入工作區，淺灰工作區、柔和卡片與細字重數據
 colors:
-  workspace: "#F2F2F2"
-  sidebar: "#F2F2F2"
+  workspace: "#F3F5F9"
+  sidebar: "#F3F5F9"
   card: "#FCFCFC"
   surface: "#FFFFFF"
   subtle-surface: "#ECEBEC"
   canvas: "#FEFEFE"
-  ink: "#1F2328"
+  ink: "#111C34"
   muted: "#6A6F78"
   faint: "#A3A8B1"
   border: "#E3E5E9"
-  accent: "#F2622E"
-  accent-ink: "#B5461C"
-  accent-surface: "#FFF1E9"
-  accent-border: "#FCDCC8"
-  action: "#2E6BF0"
-  action-ink: "#2453C2"
-  action-surface: "#EEF3FF"
-  action-border: "#D9E4FD"
+  accent: "#1E4B99"
+  accent-ink: "#163A7A"
+  accent-surface: "#E8EEF8"
+  accent-border: "#C5D3EC"
+  action: "#0A8794"
+  action-ink: "#076571"
+  action-surface: "#E3F4F5"
+  action-border: "#BCE3E6"
   ai: "#7A5AF8"
   ai-surface: "#F3F0FF"
   success: "#1F9D62"
@@ -107,7 +107,7 @@ components:
     padding: "5pt 10pt"
 ---
 
-# Design System: Hyday Talk
+# Design System: Mekak Talk
 
 ## Overview
 
@@ -117,7 +117,7 @@ components:
 
 數字用細字重的大字，標題用中等字重，層次靠字級與灰階拉開，不靠粗體。顏色只用在有意義的數字與圖形，不做裝飾
 
-來源檔案為 Sources/HydayTalk 下的 DesignTokens.swift、AlignComponents.swift、Views.swift、HomeComponents.swift、InsightsViews.swift、SettingsViews.swift、PermissionGuide.swift、VoicePanel.swift；產品能力以 PRODUCT.md 為準
+來源檔案為 Sources/MekakTalk 下的 DesignTokens.swift、AlignComponents.swift、Views.swift、HomeComponents.swift、InsightsViews.swift、SettingsViews.swift、PermissionGuide.swift、VoicePanel.swift；產品能力以 PRODUCT.md 為準
 
 **Key Characteristics:**
 - 原生 SwiftUI 與 macOS 控制行為
@@ -139,8 +139,8 @@ components:
 - **細線（border）**：列與列之間的分隔線
 
 ### Semantic
-- **語音橘（accent）**：品牌標記、開始聽寫按鈕、錄音音量、使用時段熱度
-- **操作藍（action）**：選取、主要按鈕、開關、圖表的目前值
+- **品牌藍（accent）**：品牌標記、開始聽寫按鈕、錄音音量、使用時段熱度
+- **操作青（action）**：選取、主要按鈕、開關、圖表的目前值
 - **紫色（ai）**：文字 AI 相關，例如提問比例
 - **綠色（success）**：就緒、節省時間、增加的比較
 - **黃色（warning）**：待設定
@@ -193,8 +193,8 @@ components:
 ## Components
 
 ### Buttons
-- **Primary**：藍底白字，上緣淡淡亮光，hover 變深
-- **Accent**：橘底白字，只用在開始聽寫，文字一般字重
+- **Primary**：青底白字，上緣淡淡亮光，hover 變深
+- **Accent**：藍底白字，只用在開始聽寫，文字一般字重
 - **Secondary**：淡灰底，無框線，hover 稍深
 - **Ghost**：透明底，hover 淡灰
 - **Destructive**：紅字，保留細框
@@ -204,14 +204,14 @@ components:
 同一張卡片內多欄，細線分隔；每欄為灰色小標、細字重大數字、下方一行說明或白色比較膠囊（綠色上三角表示增加，紅色下三角表示減少）
 
 ### Charts
-- 長條：過去為淡藍斜線紋，目前為實色藍，上方放白色數值膠囊
-- 折線：藍色線與點，下方淡藍漸層，格線為淡灰虛線，最新一點加白色標籤
+- 長條：過去為淡青斜線紋，目前為實色青，上方放白色數值膠囊
+- 折線：青色線與點，下方淡青漸層，格線為淡灰虛線，最新一點加白色標籤
 - 熱度格：顏色越深代表越多，附較少與較多圖例
-- 點陣：每點一筆，平均值用橘色虛線標示
+- 點陣：每點一筆，平均值用金色虛線標示
 - 每張圖都提供無障礙的數值說明
 
 ### Highlight card
-藍色漸層到暖橘的重點卡，白字，顯示從資料找出的一句使用習慣
+藍色漸層到金黃色的重點卡，白字，顯示從資料找出的一句使用習慣
 
 ### Settings row
 左邊標題與灰色說明，右邊開關、下拉選單、鍵帽或按鈕；多列放同一張卡片，用細線分隔
@@ -220,7 +220,7 @@ components:
 白色膠囊，彩色字與帶光暈的小圓點；就緒為綠色，待設定為黃色
 
 ### Navigation
-側欄與工作區同色；選中項目為白色膠囊加極淡陰影，圖示為橘色；圖示一律細線條
+側欄與工作區同色；選中項目為白色膠囊加極淡陰影，圖示為品牌藍；圖示一律細線條
 
 ### Floating voice capsule
 淺灰膠囊，背景 #F4F5F7，寬 256；錄音時依序為圖示、填滿中間的捲動波形、等寬計時、停止鍵與關閉，新的音量從右側進入，越舊越淡；不成為 key 或 main window，保留目標 App 焦點；插入或自動複製後關閉

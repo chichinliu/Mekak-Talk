@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-APP_DIR="${1:-$PROJECT_DIR/dist/Hyday Talk.app}"
+APP_DIR="${1:-$PROJECT_DIR/dist/Mekak Talk.app}"
 mkdir -p "$PROJECT_DIR/.build"
 PROBE_DIR="$(mktemp -d "$PROJECT_DIR/.build/signing-probe.XXXXXX")"
 trap 'rm -rf "$PROBE_DIR"' EXIT
@@ -16,7 +16,7 @@ CURRENT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$PROBE_D
 PROBE_VERSION=999999
 if [[ "$CURRENT_VERSION" == "$PROBE_VERSION" ]]; then PROBE_VERSION=999998; fi
 /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $PROBE_VERSION" "$PROBE_DIR/updated.app/Contents/Info.plist"
-codesign --force --sign "$SIGNING_IDENTITY" --options runtime --entitlements "$PROJECT_DIR/Resources/HydayTalk.entitlements" "$PROBE_DIR/updated.app"
+codesign --force --sign "$SIGNING_IDENTITY" --options runtime --entitlements "$PROJECT_DIR/Resources/MekakTalk.entitlements" "$PROBE_DIR/updated.app"
 
 requirement() {
     codesign --display -r- "$1" 2>&1 | awk '/designated => / { sub(/^.*designated => /, ""); print; exit }'

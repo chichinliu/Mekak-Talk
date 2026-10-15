@@ -1,7 +1,7 @@
 import AppKit
 
 let output = CommandLine.arguments[1]
-let temp = FileManager.default.temporaryDirectory.appendingPathComponent("HydayTalkIcon-" + UUID().uuidString)
+let temp = FileManager.default.temporaryDirectory.appendingPathComponent("MekakTalkIcon-" + UUID().uuidString)
 let folder = temp.appendingPathExtension("iconset")
 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 defer { try? FileManager.default.removeItem(at: folder) }
@@ -13,7 +13,7 @@ for (name, size) in [("icon_16x16", 16), ("icon_16x16@2x", 32), ("icon_32x32", 3
     NSColor(Palette.accent).setFill()
     NSBezierPath(roundedRect: rect, xRadius: 200 * scale, yRadius: 200 * scale).fill()
     NSColor(Palette.onAccent).setFill()
-    // The mark spans 72% of the tile, matching HydayLogo.
+    // The mark spans 72% of the tile, matching MekakLogo.
     let unit = rect.width * 0.72 / 100, origin = CGPoint(x: rect.minX + rect.width * 0.14, y: rect.minY + rect.height * 0.14)
     for bar in DesignTokens.Logo.bars {
         let w = bar.width * unit, h = bar.height * unit

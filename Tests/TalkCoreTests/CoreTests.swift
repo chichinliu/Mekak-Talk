@@ -12,7 +12,7 @@ final class ShortcutTests: XCTestCase {
     func testFnSpaceDoesNotAlsoDictate() {
         var state = FnShortcutState()
         _ = state.fnChanged(down: true, leftShift: false)
-        XCTAssertEqual(state.keyDown(code: 49, repeated: false, recording: false), .voice(.hyday))
+        XCTAssertNil(state.keyDown(code: 49, repeated: false, recording: false))
         XCTAssertNil(state.keyDown(code: 49, repeated: true, recording: false))
         XCTAssertNil(state.fnChanged(down: false, leftShift: false))
     }
@@ -27,7 +27,6 @@ final class ShortcutTests: XCTestCase {
         XCTAssertEqual(state.fnChanged(down: true, leftShift: false, control: true), .voice(.ask))
         XCTAssertNil(state.fnChanged(down: false, leftShift: false))
         XCTAssertEqual(VoiceAction.ask.shortcut, "fn + Control")
-        XCTAssertEqual(VoiceAction.hyday.shortcut, "fn + Space")
     }
     func testTranslateWorksInEitherKeyOrder() {
         var state = FnShortcutState()
@@ -77,7 +76,7 @@ final class TextTests: XCTestCase {
         XCTAssertEqual(TextProcessing.clean("api rapid C++", settings: settings), "API $1 \\ rapid C++")
     }
     func testMixedLanguageCounting() {
-        XCTAssertEqual(TextProcessing.wordCount("你好 Hyday Talk 2026!"), 5)
+        XCTAssertEqual(TextProcessing.wordCount("你好 Mekak Talk 2026!"), 5)
         XCTAssertEqual(TextProcessing.wordCount(""), 0)
     }
     func testArgumentsKeepPathsAndMetacharactersLiteral() throws {

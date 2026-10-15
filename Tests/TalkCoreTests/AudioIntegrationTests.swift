@@ -5,7 +5,7 @@ import AVFoundation
 final class AudioIntegrationTests: XCTestCase {
     private var folder: URL!
     override func setUpWithError() throws {
-        folder = FileManager.default.temporaryDirectory.appendingPathComponent("Hyday Talk Test " + UUID().uuidString, isDirectory: true)
+        folder = FileManager.default.temporaryDirectory.appendingPathComponent("Mekak Talk Test " + UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
     }
     override func tearDownWithError() throws { try FileManager.default.removeItem(at: folder) }
