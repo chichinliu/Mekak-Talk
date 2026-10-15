@@ -76,7 +76,8 @@ struct MainView: View {
             }.background(Palette.workspace)
         }.foregroundStyle(Palette.ink).frame(minWidth: 950, minHeight: 720).focusEffectDisabled()
             .font(Typography.font(.body)).lineSpacing(Typography.paragraphSpacing).tint(Palette.action).toggleStyle(.switch).preferredColorScheme(.light)
-            .onAppear { model.presentPermissionGuideIfNeeded() }
+            .onAppear { model.presentPermissionGuideIfNeeded(); model.updater.checkIfDue() }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.updater.checkIfDue() }
             .sheet(isPresented: $model.showPermissionGuide) {
                 PermissionGuideView(model: model, initialStep: model.permissionGuideStartStep).focusEffectDisabled()
             }
@@ -123,6 +124,8 @@ struct MainView: View {
                 ForEach([Page.hyday, .speech, .text, .dictionary, .settings]) { item in navigationItem(item) }
             }
             Spacer(minLength: 24)
+            SidebarJobs(installer: model.textModelInstaller, updater: model.updater, openText: { page = .text })
+                .padding(.bottom, -10)
             VStack(spacing: 0) {
                 Button { model.openPermissionGuide() } label: {
                     HStack(spacing: 10) {
@@ -165,6 +168,9 @@ struct HomeView: View {
     @ObservedObject var model: AppModel
     let selectPage: (Page) -> Void
     @State private var copiedPreview = false
+    @State private var copiedResult = false
+    @State private var resultExpanded = false
+    @State private var resultOverflows = false
     @State private var homeWidth: CGFloat = 1000
     private var previewInput: String { "明天先確認權限再測試錄音最後檢查文字插入" }
     private var previewOutput: String {
@@ -197,16 +203,6 @@ struct HomeView: View {
                 Color.clear.onAppear { homeWidth = proxy.size.width }
                     .onChange(of: proxy.size.width) { _, width in homeWidth = width }
             })
-            if !model.result.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        SectionTitle("最近結果", symbol: "text.bubble")
-                        Spacer()
-                        Button("複製文字") { model.copyResult() }.buttonStyle(AlignButtonStyle())
-                    }
-                    Text(model.result).font(Typography.font(.body)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
-                }.surface()
-            }
         }
         .onChange(of: previewOutput) { _, _ in copiedPreview = false }
     }
@@ -228,7 +224,15 @@ struct HomeView: View {
         VStack(alignment: .leading, spacing: 16) {
             recordingRegion
             if !model.permissionsReady { PermissionsView(model: model) }
-            outputPreview
+            if homeWidth < 760 {
+                recentResult; outputPreview
+            } else {
+                // Demo and latest result share a row 2 : 1, so the column is not a stack of full-width strips.
+                HStack(alignment: .top, spacing: 16) {
+                    outputPreview
+                    recentResult.frame(width: max(220, (homeWidth - 316 - 16) / 3))
+                }.fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
     private var recordingRegion: some View {
@@ -270,6 +274,51 @@ struct HomeView: View {
             .shadow(color: Color.black.opacity(0.04), radius: 1, y: 1)
             .shadow(color: Color.black.opacity(0.04), radius: 8, y: 4)
     }
+    /// Sits under the record button so the output reads as that recording's result.
+    private var recentResult: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    SectionTitle("最近結果", symbol: "text.bubble")
+                    if let source = recentSource {
+                        Text(source).font(Typography.font(.caption)).foregroundStyle(Palette.muted).lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 0)
+                if !latestText.isEmpty { Button { TextInsertion.copy(latestText); copiedResult = true } label: {
+                    Image(systemName: copiedResult ? "checkmark" : "doc.on.doc").frame(width: 16, height: 16)
+                }.buttonStyle(AlignButtonStyle()).help(copiedResult ? "已複製" : "複製文字")
+                    .accessibilityLabel(copiedResult ? "已複製" : "複製文字") }
+            }
+            if latestText.isEmpty {
+                Text("還沒有結果，按 fn 說一段話，結果會留在這裡。").font(Typography.font(.caption)).foregroundStyle(Palette.muted)
+            } else {
+            Text(latestText).font(Typography.font(.body)).textSelection(.enabled)
+                .lineLimit(resultExpanded ? nil : 6).frame(maxWidth: .infinity, alignment: .leading)
+                .background(GeometryReader { full in
+                    // Measure the untruncated height to know whether 展開 is needed.
+                    Text(latestText).font(Typography.font(.body)).fixedSize(horizontal: false, vertical: true)
+                        .frame(width: full.size.width).hidden()
+                        .background(GeometryReader { natural in
+                            Color.clear.onAppear { resultOverflows = natural.size.height > full.size.height + 1 || resultExpanded }
+                                .onChange(of: natural.size.height) { _, height in resultOverflows = height > full.size.height + 1 || resultExpanded }
+                        })
+                })
+            if resultOverflows {
+                Button(resultExpanded ? "收合" : "展開") { resultExpanded.toggle() }
+                    .buttonStyle(.link).font(Typography.font(.caption))
+            }
+            }
+        }.frame(maxHeight: .infinity, alignment: .topLeading).surface()
+            .onChange(of: latestText) { _, _ in copiedResult = false; resultExpanded = false }
+    }
+    /// The latest output: this session's result, or the newest saved record after a relaunch.
+    private var latestText: String { model.result.isEmpty ? (model.history.first?.text ?? "") : model.result }
+    private var recentSource: String? {
+        guard let record = model.history.first, record.text == latestText else { return nil }
+        let place = record.destination == "結果區" ? "保留在結果區" : "插入到 \(record.destination)"
+        return "\(place) · \(record.date.formatted(.relative(presentation: .named)))"
+    }
     private var outputPreview: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
@@ -294,7 +343,7 @@ struct HomeView: View {
                 }
             }
             HomeOutputComparison(input: previewInput, output: previewOutput)
-        }.surface()
+        }.frame(maxHeight: .infinity, alignment: .topLeading).surface()
     }
     private var speechModelName: String {
         if model.settings.speechBackend == .whisper {
@@ -531,5 +580,69 @@ extension View {
             .overlay(RoundedRectangle(cornerRadius: DesignTokens.Surfaces.radius).strokeBorder(Color.white.opacity(0.8), lineWidth: 1))
             .shadow(color: Color.black.opacity(0.04), radius: 1, y: 1)
             .shadow(color: Color.black.opacity(0.04), radius: 8, y: 4)
+    }
+}
+
+/// Sidebar notices for work that runs in the background: the text model
+/// download and app updates. Shows nothing when there is nothing to report.
+private struct SidebarJobs: View {
+    @ObservedObject var installer: TextModelInstaller
+    @ObservedObject var updater: AppUpdater
+    let openText: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if installer.installing {
+                Button(action: openText) {
+                    job(symbol: "arrow.down.circle", title: "下載 \(installer.model)", detail: installer.status) {
+                        ProgressView(value: installer.progress ?? 0)
+                    }
+                }.buttonStyle(.plain).pointingCursor().help("開啟文字整理設定")
+            }
+            if let update = updater.update { updateJob(update) }
+        }
+    }
+
+    @ViewBuilder private func updateJob(_ update: AppUpdate) -> some View {
+        switch updater.state {
+        case .idle: EmptyView()
+        case .available:
+            job(symbol: "sparkles", title: "有新版本 \(update.version)", detail: "目前是 \(AppUpdater.currentVersion)") {
+                Button("下載更新", action: updater.startDownload).buttonStyle(AlignButtonStyle(kind: .primary)).controlSize(.small)
+            }
+        case .downloading(let fraction):
+            job(symbol: "arrow.down.circle", title: "下載 \(update.version)", detail: "正在下載 \(Int(fraction * 100))%") {
+                HStack(spacing: 8) {
+                    ProgressView(value: fraction)
+                    Button("取消", action: updater.cancelDownload).buttonStyle(.link).font(Typography.font(.caption))
+                }
+            }
+        case .ready:
+            job(symbol: "checkmark.circle", title: "\(update.version) 已下載", detail: "結束 Hyday Talk 後，把新版拖進應用程式資料夾") {
+                Button("打開安裝檔", action: updater.openInstaller).buttonStyle(AlignButtonStyle(kind: .primary)).controlSize(.small)
+            }
+        case .failed(let message):
+            job(symbol: "exclamationmark.circle", title: "有新版本 \(update.version)", detail: message) {
+                Button("重新下載", action: updater.startDownload).buttonStyle(AlignButtonStyle()).controlSize(.small)
+            }
+        }
+    }
+
+    private func job<Accessory: View>(symbol: String, title: String, detail: String,
+                                       @ViewBuilder accessory: () -> Accessory) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: symbol).font(IconToken.font(.regular)).foregroundStyle(Palette.action).frame(width: 20)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(Typography.font(.caption, weight: .medium)).fixedSize(horizontal: false, vertical: true)
+                    Text(detail).font(Typography.font(.caption)).foregroundStyle(Palette.muted).fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            accessory()
+        }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            .background(Palette.card, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.white.opacity(0.8), lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.04), radius: 1, y: 1)
     }
 }

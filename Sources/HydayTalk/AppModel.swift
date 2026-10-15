@@ -53,6 +53,8 @@ final class AppModel: ObservableObject {
     var onPanelChange: (() -> Void)?
     private let store = LocalStore()
     let localModels = LocalSpeechModelManager()
+    let textModelInstaller = TextModelInstaller()
+    let updater = AppUpdater()
     private let audio = AudioCapture()
     private let shortcuts = GlobalShortcuts()
     private var loaded = false

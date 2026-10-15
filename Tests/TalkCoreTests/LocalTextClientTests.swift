@@ -24,7 +24,7 @@ final class LocalTextClientTests: XCTestCase {
     }
     override func tearDown() { session.invalidateAndCancel(); LocalTextStub.handler = nil }
 
-    func testDiscoveryExcludesEmbeddingAndRemoteModels() async throws {
+    func testDiscoveryKeepsReasoningButExcludesEmbeddingAndRemoteModels() async throws {
         LocalTextStub.handler = { request in
             XCTAssertEqual(request.url?.host, "127.0.0.1")
             if request.url?.lastPathComponent == "tags" {
@@ -37,7 +37,21 @@ final class LocalTextClientTests: XCTestCase {
             XCTAssertEqual(model, "text"); return (200, #"{"capabilities":["completion"]}"#)
         }
         let models = try await LocalTextClient.models(session: session)
-        XCTAssertEqual(models, ["text"])
+        XCTAssertEqual(models, ["reasoning", "text"])
+    }
+
+    func testPullReportsProgressAndRequiresSuccess() async throws {
+        LocalTextStub.handler = { request in
+            XCTAssertEqual(request.url?.path, "/api/pull")
+            return (200, #"{"status":"pulling manifest"}"# + "\n" + #"{"status":"pulling","total":200,"completed":50}"# + "\n" + #"{"status":"success"}"#)
+        }
+        let seen = LockedValues()
+        try await LocalTextClient.pull("qwen3.5:9b", session: session) { seen.append($0) }
+        XCTAssertEqual(seen.values, [nil, 0.25, nil])
+
+        LocalTextStub.handler = { _ in (200, #"{"status":"pulling","total":200,"completed":50}"#) }
+        do { try await LocalTextClient.pull("qwen3.5:9b", session: session) { _ in }; XCTFail("expected interrupted pull") }
+        catch let error as TalkError { XCTAssertEqual(error.localizedDescription, "模型下載中斷，請重試。") }
     }
 
     func testPunctuationAndListsAreReturnedThroughLocalChat() async throws {
@@ -47,6 +61,7 @@ final class LocalTextClientTests: XCTestCase {
             XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
             let body = try Self.body(request)
             XCTAssertEqual(body["stream"] as? Bool, false)
+            XCTAssertEqual(body["think"] as? Bool, false)
             let messages = body["messages"] as! [[String: String]]
             let prompt = messages.last!["content"]!
             let payload = try JSONSerialization.jsonObject(with: Data(prompt.components(separatedBy: "\n").last!.utf8)) as! [String: Any]
@@ -123,4 +138,10 @@ final class LocalTextClientTests: XCTestCase {
         }
         return try JSONSerialization.jsonObject(with: data) as! [String: Any]
     }
+}
+
+private final class LockedValues: @unchecked Sendable {
+    private let lock = NSLock(); private var stored: [Double?] = []
+    func append(_ value: Double?) { lock.lock(); stored.append(value); lock.unlock() }
+    var values: [Double?] { lock.lock(); defer { lock.unlock() }; return stored }
 }

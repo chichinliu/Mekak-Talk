@@ -159,7 +159,7 @@ struct TextSettingsView: View {
             switch model.settings.textBackend {
             case .basic: EmptyView()
             case .local, .cli:
-                LocalTextSettingsView(model: model)
+                LocalTextSettingsView(model: model, installer: model.textModelInstaller)
             case .api:
                 SettingsGroup(title: "文字 AI API", detail: "逐字稿、個人辭典與提問時選取的文字會送至這個服務。支援 /chat/completions，也可連接本機模型服務。") {
                     SettingsBlock { APISettingsFields(settings: $model.settings.textAPI, account: "text", model: model) }

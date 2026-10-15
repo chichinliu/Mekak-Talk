@@ -6,6 +6,9 @@ struct LocalTextSettingsView: View {
     @State private var models: [String] = []
     @State private var checking = false
     @State private var issue = ""
+    @State private var ollamaReachable = false
+    @ObservedObject var installer: TextModelInstaller
+    private var recommended: String { installer.model }
 
     private var selection: Binding<String> {
         Binding(get: { model.settings.localTextModel ?? "" }, set: { model.settings.localTextModel = $0.isEmpty ? nil : $0 })
@@ -29,7 +32,18 @@ struct LocalTextSettingsView: View {
                     Button("重新檢查") { Task { await refresh() } }.buttonStyle(AlignButtonStyle()).disabled(checking)
                 }
             }
-            if !issue.isEmpty {
+            if !models.contains(recommended) {
+                SettingsRow(title: "建議模型 \(recommended)", detail: installer.issue.isEmpty
+                            ? (installer.installing ? installer.status : "整理句子和標點的效果較好，下載約 6.6 GB。")
+                            : installer.issue) {
+                    if installer.installing {
+                        ProgressView(value: installer.progress ?? 0).frame(width: 120)
+                    } else if ollamaReachable {
+                        Button("安裝模型") { install() }.buttonStyle(AlignButtonStyle(kind: .primary)).disabled(checking)
+                    }
+                }
+            }
+            if !issue.isEmpty && !ollamaReachable {
                 SettingsRow(title: "Ollama") {
                     Link("下載 Ollama", destination: URL(string: "https://ollama.com/download")!).font(Typography.font(.caption)).pointingCursor()
                 }
@@ -39,6 +53,12 @@ struct LocalTextSettingsView: View {
                     .font(Typography.font(.caption)).foregroundStyle(Palette.muted)
             }
         }.task { await refresh() }
+            .onChange(of: installer.installing) { _, busy in if !busy { Task { await refresh() } } }
+    }
+
+    private func install() {
+        // The download outlives this page, so the result goes to settings, not to view state.
+        installer.install { [model, recommended] in model.settings.localTextModel = recommended }
     }
 
     @MainActor private func refresh() async {
@@ -46,12 +66,12 @@ struct LocalTextSettingsView: View {
         defer { checking = false }
         do {
             let available = try await LocalTextClient.models()
-            try Task.checkCancellation(); models = available
+            try Task.checkCancellation(); models = available; ollamaReachable = true
             if available.isEmpty { issue = "未偵測到文字模型，請先在 Ollama 下載模型後重新檢查。" }
             else if !available.contains(model.settings.localTextModel ?? "") {
-                model.settings.localTextModel = available.contains("gemma3:4b") ? "gemma3:4b" : available.first
+                model.settings.localTextModel = [recommended, "gemma3:4b"].first(where: available.contains) ?? available.first
             }
         } catch is CancellationError { }
-        catch { models = []; issue = "無法連接本機文字服務，請啟動 Ollama 後重新檢查。" }
+        catch { models = []; ollamaReachable = false; issue = "無法連接本機文字服務，請啟動 Ollama 後重新檢查。" }
     }
 }
